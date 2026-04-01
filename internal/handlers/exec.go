@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/user/exec-server/internal/auth"
 	"github.com/user/exec-server/internal/auditor"
@@ -130,7 +131,7 @@ func (h *ExecHandler) handle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if result.Result.Truncated {
 		w.Header().Set("X-Output-Truncated", "true")
-		w.Header().Set("X-Output-Size-Bytes", string(result.Result.OutputSize))
+		w.Header().Set("X-Output-Size-Bytes", strconv.FormatInt(result.Result.OutputSize, 10))
 	}
 
 	// Send response
