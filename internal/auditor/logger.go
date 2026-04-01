@@ -14,13 +14,13 @@ import (
 
 // Auditor handles audit logging
 type Auditor struct {
-	logFile      string
+	logFile       string
 	rotationMaxMB int64
 	rotationCount int
-	channel      chan *models.AuditEntry
-	wg           sync.WaitGroup
-	ctx          context.Context
-	cancel       context.CancelFunc
+	channel       chan *models.AuditEntry
+	wg            sync.WaitGroup
+	ctx           context.Context
+	cancel        context.CancelFunc
 }
 
 // NewAuditor creates a new auditor with buffered channel
@@ -148,7 +148,10 @@ func (a *Auditor) rotateLog() error {
 	}
 
 	// Move current log to .1
-	return os.Rename(a.logFile, a.logFile+".1")
+	if err := os.Rename(a.logFile, a.logFile+".1"); err != nil {
+		return err
+	}
+	return nil
 }
 
 // expandPath expands ~ to home directory

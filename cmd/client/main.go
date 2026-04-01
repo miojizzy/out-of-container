@@ -39,11 +39,11 @@ type ErrorResponse struct {
 }
 
 var (
-	serverURL = flag.String("server", "", "Server URL")
-	apiToken  = flag.String("token", "", "API token")
-	command   = flag.String("command", "", "Command to execute")
-	args      = flag.String("args", "", "Command arguments (comma-separated)")
-	cwd       = flag.String("cwd", "", "Working directory")
+	serverURL  = flag.String("server", "", "Server URL")
+	apiToken   = flag.String("token", "", "API token")
+	command    = flag.String("command", "", "Command to execute")
+	args       = flag.String("args", "", "Command arguments (comma-separated)")
+	cwd        = flag.String("cwd", "", "Working directory")
 	configPath = flag.String("config", "", "Config file path")
 )
 
@@ -59,7 +59,9 @@ func main() {
 
 	var cfg ClientConfig
 	if data, err := os.ReadFile(configFile); err == nil {
-		yaml.Unmarshal(data, &cfg)
+		if err := yaml.Unmarshal(data, &cfg); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to parse config file: %v\n", err)
+		}
 	}
 
 	// Override with flags
@@ -91,7 +93,10 @@ func main() {
 	// Parse args
 	var argsList []string
 	if *args != "" {
-		json.Unmarshal([]byte("["+*args+"]"), &argsList)
+		if err := json.Unmarshal([]byte("["+*args+"]"), &argsList); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to parse args: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	// Execute
@@ -118,13 +123,19 @@ func main() {
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp ErrorResponse
-		json.Unmarshal(respBody, &errResp)
+		if err := json.Unmarshal(respBody, &errResp); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to parse error response: %v\n", err)
+			os.Exit(1)
+		}
 		fmt.Fprintf(os.Stderr, "Error: %s - %s\n", errResp.Error, errResp.Message)
 		os.Exit(1)
 	}
 
 	var execResp ExecResponse
-	json.Unmarshal(respBody, &execResp)
+	if err := json.Unmarshal(respBody, &execResp); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to parse response: %v\n", err)
+		os.Exit(1)
+	}
 
 	fmt.Print(execResp.Stdout)
 	if execResp.Stderr != "" {

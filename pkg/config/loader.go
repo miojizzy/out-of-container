@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"gopkg.in/yaml.v3"
 	"github.com/user/exec-server/internal/models"
+	"gopkg.in/yaml.v3"
 )
 
 // Loader handles config file operations

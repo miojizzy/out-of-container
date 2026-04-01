@@ -2,7 +2,9 @@ package concurrency
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/user/exec-server/internal/models"
 )
@@ -41,10 +43,13 @@ func (l *ConcurrencyLimiter) Middleware(next http.HandlerFunc) http.HandlerFunc 
 func (l *ConcurrencyLimiter) serviceUnavailable(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusServiceUnavailable)
-	json.NewEncoder(w).Encode(models.ErrorResponse{
+	if err := json.NewEncoder(w).Encode(models.ErrorResponse{
 		Error:   "service_unavailable",
 		Message: "maximum concurrent executions reached",
-	})
+	}); err != nil {
+		// Log error but don't fail the request
+		fmt.Fprintf(os.Stderr, "Failed to encode error response: %v\n", err)
+	}
 }
 
 // Current returns current number of active executions

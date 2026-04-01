@@ -6,8 +6,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/user/exec-server/internal/auth"
 	"github.com/user/exec-server/internal/auditor"
+	"github.com/user/exec-server/internal/auth"
 	"github.com/user/exec-server/internal/concurrency"
 	"github.com/user/exec-server/internal/executor"
 	"github.com/user/exec-server/internal/models"
@@ -16,11 +16,11 @@ import (
 
 // ExecHandler handles /exec requests
 type ExecHandler struct {
-	executor     *executor.Executor
-	whitelist    *whitelist.Checker
-	auditor      *auditor.Auditor
-	auth         *auth.AuthMiddleware
-	limiter      *concurrency.ConcurrencyLimiter
+	executor  *executor.Executor
+	whitelist *whitelist.Checker
+	auditor   *auditor.Auditor
+	auth      *auth.AuthMiddleware
+	limiter   *concurrency.ConcurrencyLimiter
 }
 
 // NewExecHandler creates a new exec handler
@@ -136,21 +136,25 @@ func (h *ExecHandler) handle(w http.ResponseWriter, r *http.Request) {
 
 	// Send response
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(result.Result)
+	if err := json.NewEncoder(w).Encode(result.Result); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to encode response: %v\n", err)
+	}
 }
 
 // HealthHandler handles /health requests
 func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+	if _, err := w.Write([]byte("OK")); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to write health response: %v\n", err)
+	}
 }
 
 // getHostname returns hostname for audit logs
-func getHostname() string {
-	hostname, _ := os.Hostname()
-	if hostname == "" {
-		hostname = "unknown"
-	}
-	return hostname
-}
+// func getHostname() string {
+// 	hostname, _ := os.Hostname()
+// 	if hostname == "" {
+// 		hostname = "unknown"
+// 	}
+// 	return hostname
+// }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"syscall"
 	"time"
@@ -17,7 +18,7 @@ import (
 
 // Executor handles command execution
 type Executor struct {
-	timeout       time.Duration
+	timeout        time.Duration
 	maxOutputBytes int64
 }
 
@@ -103,9 +104,13 @@ func (e *Executor) Execute(cmd *models.Command) *ExecuteResult {
 	// Check for timeout
 	if ctx.Err() == context.DeadlineExceeded {
 		// Kill process group
-		syscall.Kill(-execCmd.Process.Pid, syscall.SIGKILL)
+		if err := syscall.Kill(-execCmd.Process.Pid, syscall.SIGKILL); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to kill process group: %v\n", err)
+		}
 		// Wait again to reap zombie
-		execCmd.Wait()
+		if err := execCmd.Wait(); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to wait for process: %v\n", err)
+		}
 
 		return &ExecuteResult{
 			Result: &models.Result{
@@ -135,12 +140,12 @@ func (e *Executor) Execute(cmd *models.Command) *ExecuteResult {
 
 	return &ExecuteResult{
 		Result: &models.Result{
-			ExitCode:    exitCode,
-			Stdout:      stdoutBuf.String(),
-			Stderr:      stderrBuf.String(),
-			DurationMs:  duration,
-			Truncated:   truncated,
-			OutputSize:  outputSize,
+			ExitCode:   exitCode,
+			Stdout:     stdoutBuf.String(),
+			Stderr:     stderrBuf.String(),
+			DurationMs: duration,
+			Truncated:  truncated,
+			OutputSize: outputSize,
 		},
 	}
 }
@@ -178,14 +183,14 @@ func (b *LimitedBuffer) Write(p []byte) (n int, err error) {
 		// Write only up to limit
 		remaining := b.maxBytes - b.bytesWritten
 		if remaining > 0 {
-			n, err = b.Buffer.Write(p[:remaining])
+			n, _ = b.Buffer.Write(p[:remaining])
 			b.bytesWritten += int64(n)
 		}
 		b.truncated = true
 		return len(p), nil // Report full write to satisfy caller
 	}
 
-	n, err = b.Buffer.Write(p)
+	n, _ = b.Buffer.Write(p)
 	b.bytesWritten += int64(n)
 	return
 }
@@ -219,10 +224,13 @@ func (c *SharedCounter) CanWrite(n int64) bool {
 func ErrorResponse(w http.ResponseWriter, statusCode int, errMsg, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(models.ErrorResponse{
+	if err := json.NewEncoder(w).Encode(models.ErrorResponse{
 		Error:   errMsg,
 		Message: message,
-	})
+	}); err != nil {
+		// Log error but don't fail the request
+		fmt.Fprintf(os.Stderr, "Failed to encode error response: %v\n", err)
+	}
 }
 
 // Ensure Executor implements io.Writer interface check
