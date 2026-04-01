@@ -96,10 +96,12 @@ func (h *ExecHandler) handle(w http.ResponseWriter, r *http.Request) {
 		if result.HTTPError == http.StatusRequestTimeout {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(result.HTTPError)
-			json.NewEncoder(w).Encode(models.ErrorResponse{
+			if err := json.NewEncoder(w).Encode(models.ErrorResponse{
 				Error:   "timeout",
 				Message: result.Error.Error(),
-			})
+			}); err != nil {
+				fmt.Fprintf(os.Stderr, "failed to encode timeout error response: %v\n", err)
+			}
 		} else {
 			executor.ErrorResponse(w, result.HTTPError, "execution_failed", result.Error.Error())
 		}

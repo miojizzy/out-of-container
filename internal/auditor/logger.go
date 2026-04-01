@@ -144,12 +144,14 @@ func (a *Auditor) rotateLog() error {
 	for i := a.rotationCount - 1; i >= 1; i-- {
 		oldPath := fmt.Sprintf("%s.%d", a.logFile, i)
 		newPath := fmt.Sprintf("%s.%d", a.logFile, i+1)
-		os.Rename(oldPath, newPath)
+		if err := os.Rename(oldPath, newPath); err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("failed to rotate %s to %s: %w", oldPath, newPath, err)
+		}
 	}
 
 	// Move current log to .1
 	if err := os.Rename(a.logFile, a.logFile+".1"); err != nil {
-		return err
+		return fmt.Errorf("failed to rotate current log: %w", err)
 	}
 	return nil
 }
