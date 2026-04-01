@@ -112,7 +112,7 @@ func (c *Checker) isPathAllowed(path string) bool {
 
 // loadConfig loads configuration from file
 func (c *Checker) loadConfig() error {
-	data, err := os.ReadFile(c.configPath)
+	_, err := os.ReadFile(c.configPath)
 	if err != nil {
 		return err
 	}
