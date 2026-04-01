@@ -3,7 +3,9 @@ package auth
 import (
 	"crypto/subtle"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/user/exec-server/internal/models"
@@ -53,10 +55,13 @@ func (a *AuthMiddleware) Middleware(next http.HandlerFunc) http.HandlerFunc {
 func (a *AuthMiddleware) unauthorized(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnauthorized)
-	json.NewEncoder(w).Encode(models.ErrorResponse{
+	if err := json.NewEncoder(w).Encode(models.ErrorResponse{
 		Error:   "unauthorized",
 		Message: message,
-	})
+	}); err != nil {
+		// Log error but don't fail the request
+		fmt.Fprintf(os.Stderr, "Failed to encode unauthorized error response: %v\n", err)
+	}
 }
 
 // GetTokenPrefix returns the first 8 characters of token for logging
