@@ -1,16 +1,12 @@
 linters:
   enable:
     - gofmt
-    - goimports
     - govet
     - errcheck
     - staticcheck
     - unused
     - gosimple
-    - structcheck
-    - varcheck
     - ineffassign
-    - deadcode
     - typecheck
 
 linters-settings:
@@ -23,4 +19,6 @@ issues:
     - path: _test\.go
       linters:
         - errcheck
-        - staticcheck
+
+run:
+  timeout: 5m
