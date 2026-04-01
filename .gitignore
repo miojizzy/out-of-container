@@ -1,0 +1,29 @@
+# Binaries
+exec-server
+exec-client
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output
+*.out
+
+# Go workspace
+go.work
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config files with secrets
+config.yaml
+!config.yaml.example

@@ -1,0 +1,29 @@
+server:
+    listen: "0.0.0.0:8080"
+    timeout_seconds: 30
+    max_output_mb: 10
+    max_concurrent: 5
+    api_token: ""
+
+whitelist:
+    literal_commands:
+        - "make"
+        - "cmake"
+        - "g++"
+        - "gcc"
+        - "python3"
+        - "pytest"
+
+    regex_commands: []
+
+    allowed_paths:
+        - "/home/user/projects"
+        - "/tmp/build"
+
+    reload_interval_seconds: 5
+
+audit:
+    enabled: true
+    log_file: "~/.local/share/exec-server/audit.log"
+    rotation_max_mb: 10
+    rotation_count: 10
