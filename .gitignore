@@ -27,3 +27,8 @@ Thumbs.db
 # Config files with secrets
 config.yaml
 !config.yaml.example
+
+# agent
+.gstack
+.claude
+
