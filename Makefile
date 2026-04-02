@@ -1,7 +1,7 @@
 .PHONY: all build clean test install run-server run-client help
 
-BINARY_SERVER=exec-server
-BINARY_CLIENT=exec-client
+BINARY_SERVER=ooc-server
+BINARY_CLIENT=ooc-client
 VERSION?=$(shell git describe --tags --always --dirty)
 BUILD_TIME=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS=-ldflags "-s -w -X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME)"
@@ -11,18 +11,18 @@ all: build
 ## build: Build server and client binaries
 build:
 	@echo "Building server..."
-	@go build $(LDFLAGS) -o $(BINARY_SERVER) ./cmd/server
+	@go build $(LDFLAGS) -o $(BINARY_SERVER) ./cmd/ooc-server
 	@echo "Building client..."
-	@go build $(LDFLAGS) -o $(BINARY_CLIENT) ./cmd/client
+	@go build $(LDFLAGS) -o $(BINARY_CLIENT) ./cmd/ooc-client
 	@echo "Build complete!"
 
 ## build-linux: Build for Linux (static linking, CentOS 7 compatible)
 build-linux:
 	@echo "Building for Linux (static)..."
-	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_SERVER)-linux-amd64 ./cmd/server
-	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o $(BINARY_SERVER)-linux-arm64 ./cmd/server
-	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_CLIENT)-linux-amd64 ./cmd/client
-	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o $(BINARY_CLIENT)-linux-arm64 ./cmd/client
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_SERVER)-linux-amd64 ./cmd/ooc-server
+	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o $(BINARY_SERVER)-linux-arm64 ./cmd/ooc-server
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BINARY_CLIENT)-linux-amd64 ./cmd/ooc-client
+	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o $(BINARY_CLIENT)-linux-arm64 ./cmd/ooc-client
 	@echo "Linux builds complete!"
 
 ## clean: Remove binaries and test artifacts
@@ -50,7 +50,7 @@ install: build
 
 ## run-server: Run server in development mode
 run-server: build
-	@./$(BINARY_SERVER) --config ~/.config/exec-server/config.yaml
+	@./$(BINARY_SERVER) --config ~/.config/ooc-server/config.yaml
 
 ## run-client: Run client in development mode
 run-client: build
@@ -78,7 +78,7 @@ deps:
 
 ## docker-build: Build Docker image
 docker-build:
-	@docker build -t exec-server:$(VERSION) .
+	@docker build -t ooc-server:$(VERSION) .
 
 ## release: Create release binaries
 release: clean build-linux
@@ -88,23 +88,23 @@ release: clean build-linux
 	@cd release && sha256sum * > checksums.txt
 	@echo "Release binaries in release/"
 
-## install-exec-skill: Install exec-client binary to the skill directory
-install-exec-skill: build
-	@echo "Installing exec-client to .claude/skills/exec/bin/"
-	@mkdir -p .claude/skills/exec/bin
-	@cp $(BINARY_CLIENT) .claude/skills/exec/bin/
-	@chmod +x .claude/skills/exec/bin/$(BINARY_CLIENT)
+## install-ooc-skill: Install ooc-client binary to the skill directory
+install-ooc-skill: build
+	@echo "Installing ooc-client to .claude/skills/ooc-exec/bin/"
+	@mkdir -p .claude/skills/ooc-exec/bin
+	@cp $(BINARY_CLIENT) .claude/skills/ooc-exec/bin/
+	@chmod +x .claude/skills/ooc-exec/bin/$(BINARY_CLIENT)
 	@echo "Skill binary installed!"
 
-## exec-skill-setup: Run interactive setup wizard for exec-client skill
-exec-skill-setup:
+## ooc-skill-setup: Run interactive setup wizard for ooc-client skill
+ooc-skill-setup:
 	@./scripts/setup-exec-skill.sh
 
 ## test-exec-skill: Test the exec-client skill
 test-exec-skill:
 	@echo "Testing exec-client skill..."
-	@echo "If the skill is properly configured, you should be able to use /exec command"
-	@echo "Example: /exec command=\"echo\" args=\"Hello from container!\" cwd=\"/\""
+	@echo "If the skill is properly configured, you should be able to use /ooc-exec command"
+	@echo "Example: /ooc-exec command=\"echo\" args=\"Hello from container!\" cwd=\"/\""
 
 ## help: Show this help message
 help:

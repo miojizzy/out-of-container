@@ -104,7 +104,7 @@ func (l *Loader) InitConfig() error {
 		},
 		Audit: models.AuditConfig{
 			Enabled:       true,
-			LogFile:       "~/.local/share/exec-server/audit.log",
+			LogFile:       "~/.local/share/ooc-server/audit.log",
 			RotationMaxMB: 10,
 			RotationCount: 10,
 		},
