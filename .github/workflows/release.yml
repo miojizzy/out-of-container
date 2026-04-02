@@ -32,31 +32,31 @@ jobs:
           # Linux AMD64
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
             -ldflags="-s -w -X main.Version=${{ steps.get_version.outputs.VERSION }} -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            -o exec-server-linux-amd64 ./cmd/server
+            -o ooc-server-linux-amd64 ./cmd/ooc-server
 
           # Linux ARM64
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build \
             -ldflags="-s -w -X main.Version=${{ steps.get_version.outputs.VERSION }} -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            -o exec-server-linux-arm64 ./cmd/server
+            -o ooc-server-linux-arm64 ./cmd/ooc-server
 
       - name: Build client binaries
         run: |
           # Linux AMD64
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
             -ldflags="-s -w" \
-            -o exec-client-linux-amd64 ./cmd/client
+            -o ooc-client-linux-amd64 ./cmd/ooc-client
 
           # Linux ARM64
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build \
             -ldflags="-s -w" \
-            -o exec-client-linux-arm64 ./cmd/client
+            -o ooc-client-linux-arm64 ./cmd/ooc-client
 
       - name: Generate checksums
         run: |
-          sha256sum exec-server-linux-amd64 > exec-server-linux-amd64.sha256
-          sha256sum exec-server-linux-arm64 > exec-server-linux-arm64.sha256
-          sha256sum exec-client-linux-amd64 > exec-client-linux-amd64.sha256
-          sha256sum exec-client-linux-arm64 > exec-client-linux-arm64.sha256
+          sha256sum ooc-server-linux-amd64 > ooc-server-linux-amd64.sha256
+          sha256sum ooc-server-linux-arm64 > ooc-server-linux-arm64.sha256
+          sha256sum ooc-client-linux-amd64 > ooc-client-linux-amd64.sha256
+          sha256sum ooc-client-linux-arm64 > ooc-client-linux-arm64.sha256
 
           # Combine all checksums
           cat *.sha256 > checksums.txt
@@ -65,7 +65,7 @@ jobs:
         id: release_notes
         run: |
           cat > release_notes.md << 'EOF'
-          ## exec-server ${{ steps.get_version.outputs.VERSION }}
+          ## ooc-server ${{ steps.get_version.outputs.VERSION }}
 
           容器远程命令执行系统 - Phase 1 正式发布
 
@@ -94,30 +94,30 @@ jobs:
 
           ```bash
           # Linux x86_64
-          curl -L -o exec-server https://github.com/miojizzy/out-of-container/releases/download/${{ steps.get_version.outputs.VERSION }}/exec-server-linux-amd64
-          chmod +x exec-server
+          curl -L -o ooc-server https://github.com/miojizzy/out-of-container/releases/download/${{ steps.get_version.outputs.VERSION }}/ooc-server-linux-amd64
+          chmod +x ooc-server
 
-          curl -L -o exec-client https://github.com/miojizzy/out-of-container/releases/download/${{ steps.get_version.outputs.VERSION }}/exec-client-linux-amd64
-          chmod +x exec-client
+          curl -L -o ooc-client https://github.com/miojizzy/out-of-container/releases/download/${{ steps.get_version.outputs.VERSION }}/ooc-client-linux-amd64
+          chmod +x ooc-client
           ```
 
           ### 快速开始
 
           1. 初始化配置：
              ```bash
-             ./exec-server --init
+             ./ooc-server --init
              ```
 
-          2. 编辑配置文件（`~/.config/exec-server/config.yaml`）设置白名单
+          2. 编辑配置文件（`~/.config/ooc-server/config.yaml`）设置白名单
 
           3. 启动 server：
              ```bash
-             ./exec-server --config ~/.config/exec-server/config.yaml
+             ./ooc-server --config ~/.config/ooc-server/config.yaml
              ```
 
           4. 使用 client 执行命令：
              ```bash
-             ./exec-client -command make -cwd /path/to/project
+             ./ooc-client -command make -cwd /path/to/project
              ```
 
           ### 文档
@@ -140,10 +140,10 @@ jobs:
         with:
           body_path: release_notes.md
           files: |
-            exec-server-linux-amd64
-            exec-server-linux-arm64
-            exec-client-linux-amd64
-            exec-client-linux-arm64
+            ooc-server-linux-amd64
+            ooc-server-linux-arm64
+            ooc-client-linux-amd64
+            ooc-client-linux-arm64
             checksums.txt
           draft: false
           prerelease: false
