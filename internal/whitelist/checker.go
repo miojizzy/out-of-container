@@ -2,12 +2,14 @@ package whitelist
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/user/exec-server/internal/models"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -112,7 +114,7 @@ func (c *Checker) isPathAllowed(path string) bool {
 
 // loadConfig loads configuration from file
 func (c *Checker) loadConfig() error {
-	_, err := os.ReadFile(c.configPath)
+	data, err := os.ReadFile(c.configPath)
 	if err != nil {
 		return err
 	}
@@ -122,13 +124,18 @@ func (c *Checker) loadConfig() error {
 		return err
 	}
 
+	// Parse YAML config
+	var config models.Config
+	if err := yaml.Unmarshal(data, &config); err != nil {
+		return fmt.Errorf("failed to parse config file: %w", err)
+	}
+
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
+	c.config = &config
 	c.lastMod = info.ModTime()
 
-	// TODO: Parse YAML config
-	// For now, return nil
 	return nil
 }
 
