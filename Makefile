@@ -88,6 +88,24 @@ release: clean build-linux
 	@cd release && sha256sum * > checksums.txt
 	@echo "Release binaries in release/"
 
+## install-exec-skill: Install exec-client binary to the skill directory
+install-exec-skill: build
+	@echo "Installing exec-client to .claude/skills/exec/bin/"
+	@mkdir -p .claude/skills/exec/bin
+	@cp $(BINARY_CLIENT) .claude/skills/exec/bin/
+	@chmod +x .claude/skills/exec/bin/$(BINARY_CLIENT)
+	@echo "Skill binary installed!"
+
+## exec-skill-setup: Run interactive setup wizard for exec-client skill
+exec-skill-setup:
+	@./scripts/setup-exec-skill.sh
+
+## test-exec-skill: Test the exec-client skill
+test-exec-skill:
+	@echo "Testing exec-client skill..."
+	@echo "If the skill is properly configured, you should be able to use /exec command"
+	@echo "Example: /exec command=\"echo\" args=\"Hello from container!\" cwd=\"/\""
+
 ## help: Show this help message
 help:
 	@echo "Usage: make [target]"

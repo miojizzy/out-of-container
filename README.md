@@ -297,6 +297,63 @@ go test -v ./...
 - `pkg/` - 公共库代码（可被外部引用）
 - `config/` - 配置文件示例
 
+## Claude Code 技能集成
+
+本项目提供了一个 [Claude Code](https://claude.ai/code) 技能，让 AI agent 能够直接在容器中执行命令。
+
+### 安装技能
+
+#### 自动安装（推荐）
+
+```bash
+# 从项目根目录运行
+make install-exec-skill
+```
+
+这会将 `exec-client` 二进制文件安装到 `.claude/skills/exec/bin/` 目录。
+
+#### 交互式配置向导
+
+```bash
+# 运行交互式设置脚本
+make exec-skill-setup
+# 或直接运行脚本
+./scripts/setup-exec-skill.sh
+```
+
+脚本会引导你完成：
+1. 配置服务器 URL 和 API Token
+2. 验证连接
+3. 测试技能
+
+### 使用技能
+
+在 Claude Code 中，你可以直接使用 `/exec` 命令：
+
+```bash
+# 执行简单命令
+/exec command="ls" cwd="/home/user"
+
+# 带参数的命令
+/exec command="go" args="test,-v" cwd="/app"
+
+# 复杂参数（JSON 数组格式）
+/exec command="python" args='["-m","pytest","tests/"]' cwd="/app"
+```
+
+### 技能路由
+
+为了让 Claude 自动使用此技能，在项目 `CLAUDE.md` 中添加：
+
+```markdown
+## Skill routing
+
+当用户请求匹配可用技能时，始终使用 Skill 工具调用它作为第一个动作。
+
+关键路由规则：
+- 需要运行命令、查看文件、执行构建等操作 → 调用 /exec
+```
+
 ## 故障排查
 
 ### Server 无法启动
