@@ -69,18 +69,18 @@ jobs:
 
       - name: Build server
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o exec-server-linux-amd64 ./cmd/server
-          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o exec-server-linux-arm64 ./cmd/server
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ooc-server-linux-amd64 ./cmd/ooc-server
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o ooc-server-linux-arm64 ./cmd/ooc-server
 
       - name: Build client
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o exec-client-linux-amd64 ./cmd/client
-          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o exec-client-linux-arm64 ./cmd/client
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ooc-client-linux-amd64 ./cmd/ooc-client
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o ooc-client-linux-arm64 ./cmd/ooc-client
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: |
-            exec-server-linux-*
-            exec-client-linux-*
+            ooc-server-linux-*
+            ooc-client-linux-*
