@@ -1,4 +1,4 @@
-# exec-server
+# ooc-server (Out-of-Container Server)
 
 容器远程命令执行系统 - 让容器内的 AI agent 能够在宿主机上执行编译、测试等命令。
 
@@ -28,32 +28,32 @@
 
 ### 易用性
 - ✅ 单二进制文件部署（Go 静态编译）
-- ✅ 配置文件外部化（支持 `exec-server init` 生成）
+- ✅ 配置文件外部化（支持 `ooc-server init` 生成）
 - ✅ 兼容老系统（支持 CentOS 7 / glibc 2.17+）
 
 ## 快速开始
 
 ### 1. 安装
 
-从 [GitHub Releases](https://github.com/user/exec-server/releases) 下载对应平台的二进制文件：
+从 [GitHub Releases](https://github.com/user/out-of-container/releases) 下载对应平台的二进制文件：
 
 ```bash
 # Linux x86_64
-curl -L -o exec-server https://github.com/user/exec-server/releases/latest/download/exec-server-linux-amd64
-chmod +x exec-server
+curl -L -o ooc-server https://github.com/user/out-of-container/releases/latest/download/ooc-server-linux-amd64
+chmod +x ooc-server
 
-curl -L -o exec-client https://github.com/user/exec-server/releases/latest/download/exec-client-linux-amd64
-chmod +x exec-client
+curl -L -o ooc-client https://github.com/user/out-of-container/releases/latest/download/ooc-client-linux-amd64
+chmod +x ooc-client
 ```
 
 ### 2. 初始化配置
 
 ```bash
 # 在宿主机上生成配置文件
-./exec-server --init
+./ooc-server --init
 
 # 输出示例：
-# Config file created: /home/user/.config/exec-server/config.yaml
+# Config file created: /home/user/.config/ooc-server/config.yaml
 # API Token: a1b2c3d4e5f6...
 #
 # Please edit the config file to customize:
@@ -63,7 +63,7 @@ chmod +x exec-client
 
 ### 3. 配置白名单
 
-编辑 `~/.config/exec-server/config.yaml`：
+编辑 `~/.config/ooc-server/config.yaml`：
 
 ```yaml
 whitelist:
@@ -83,7 +83,7 @@ whitelist:
 ### 4. 启动 Server
 
 ```bash
-./exec-server --config ~/.config/exec-server/config.yaml
+./ooc-server --config ~/.config/ooc-server/config.yaml
 
 # 输出：
 # Server starting on 0.0.0.0:8080
@@ -91,7 +91,7 @@ whitelist:
 
 ### 5. 配置 Client
 
-在容器内创建配置文件 `~/.config/exec-client/config.yaml`：
+在容器内创建配置文件 `~/.config/ooc-client/config.yaml`：
 
 ```yaml
 server_url: "http://<宿主机IP>:8080"
@@ -103,23 +103,23 @@ timeout_seconds: 35
 
 ```bash
 # 基本用法
-./exec-client -command make -cwd /home/user/projects
+./ooc-client -command make -cwd /home/user/projects
 
 # 带参数
-./exec-client -command g++ -args '"-std=c++17","main.cpp"' -cwd /home/user/projects
+./ooc-client -command g++ -args '"-std=c++17","main.cpp"' -cwd /home/user/projects
 
 # 使用配置文件中的 server URL 和 token
-./exec-client -command pytest -cwd /home/user/projects
+./ooc-client -command pytest -cwd /home/user/projects
 
 # 覆盖配置
-./exec-client -server http://localhost:8080 -token your-token -command echo -cwd /tmp
+./ooc-client -server http://localhost:8080 -token your-token -command echo -cwd /tmp
 ```
 
 ## 配置说明
 
 ### Server 配置
 
-配置文件路径：`~/.config/exec-server/config.yaml`
+配置文件路径：`~/.config/ooc-server/config.yaml`
 
 ```yaml
 server:
@@ -144,14 +144,14 @@ whitelist:
 
 audit:
   enabled: true                   # 启用审计日志
-  log_file: "~/.local/share/exec-server/audit.log"
+  log_file: "~/.local/share/ooc-server/audit.log"
   rotation_max_mb: 10             # 单个日志文件最大大小
   rotation_count: 10              # 保留的日志文件数量
 ```
 
 ### Client 配置
 
-配置文件路径：`~/.config/exec-client/config.yaml`
+配置文件路径：`~/.config/ooc-client/config.yaml`
 
 ```yaml
 server_url: "http://localhost:8080"
@@ -202,11 +202,11 @@ timeout_seconds: 35               # 比 server 略大，避免网络延迟误判
    openssl rand -hex 32
 
    # 更新配置文件
-   vim ~/.config/exec-server/config.yaml
+   vim ~/.config/ooc-server/config.yaml
 
    # 重启 server
-   pkill exec-server
-   ./exec-server --config ~/.config/exec-server/config.yaml
+   pkill ooc-server
+   ./ooc-server --config ~/.config/ooc-server/config.yaml
    ```
 
 2. **限制网络访问**
@@ -220,10 +220,10 @@ timeout_seconds: 35               # 比 server 略大，避免网络延迟误判
 4. **监控审计日志**
    ```bash
    # 查看最近的执行记录
-   tail -f ~/.local/share/exec-server/audit.log | jq .
+   tail -f ~/.local/share/ooc-server/audit.log | jq .
 
    # 统计命令执行频率
-   cat ~/.local/share/exec-server/audit.log | jq -r '.command' | sort | uniq -c
+   cat ~/.local/share/ooc-server/audit.log | jq -r '.command' | sort | uniq -c
    ```
 
 ## 架构设计
@@ -275,8 +275,8 @@ Response (返回结果)
 make build
 
 # 或手动构建
-go build -o exec-server ./cmd/server
-go build -o exec-client ./cmd/client
+go build -o ooc-server ./cmd/ooc-server
+go build -o ooc-client ./cmd/ooc-client
 ```
 
 ### 测试
@@ -310,7 +310,7 @@ go test -v ./...
 make install-exec-skill
 ```
 
-这会将 `exec-client` 二进制文件安装到 `.claude/skills/exec/bin/` 目录。
+这会将 `ooc-client` 二进制文件安装到 `.claude/skills/ooc-exec/bin/` 目录。
 
 #### 交互式配置向导
 
@@ -328,17 +328,17 @@ make exec-skill-setup
 
 ### 使用技能
 
-在 Claude Code 中，你可以直接使用 `/exec` 命令：
+在 Claude Code 中，你可以直接使用 `/ooc-exec` 命令：
 
 ```bash
 # 执行简单命令
-/exec command="ls" cwd="/home/user"
+/ooc-exec command="ls" cwd="/home/user"
 
 # 带参数的命令
-/exec command="go" args="test,-v" cwd="/app"
+/ooc-exec command="go" args="test,-v" cwd="/app"
 
 # 复杂参数（JSON 数组格式）
-/exec command="python" args='["-m","pytest","tests/"]' cwd="/app"
+/ooc-exec command="python" args='["-m","pytest","tests/"]' cwd="/app"
 ```
 
 ### 技能路由
@@ -351,7 +351,7 @@ make exec-skill-setup
 当用户请求匹配可用技能时，始终使用 Skill 工具调用它作为第一个动作。
 
 关键路由规则：
-- 需要运行命令、查看文件、执行构建等操作 → 调用 /exec
+- 需要运行命令、查看文件、执行构建等操作 → 调用 /ooc-exec
 ```
 
 ## 故障排查
@@ -366,7 +366,7 @@ make exec-skill-setup
 lsof -i :8080
 
 # 修改配置文件中的端口
-vim ~/.config/exec-server/config.yaml
+vim ~/.config/ooc-server/config.yaml
 # server.listen: "0.0.0.0:8081"
 ```
 
@@ -389,7 +389,7 @@ vim ~/.config/exec-server/config.yaml
 cat ~/.config/exec-server/config.yaml | grep -A 10 whitelist
 
 # 添加需要的命令
-vim ~/.config/exec-server/config.yaml
+vim ~/.config/ooc-server/config.yaml
 
 # 等待 5 秒让配置自动重载，或重启 server
 ```

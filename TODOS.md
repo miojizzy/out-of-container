@@ -5,7 +5,7 @@ Project: out-of-container (容器远程命令执行系统)
 
 ## Phase 2: 异步执行模式
 
-### /exec/async API
+### /ooc-exec/async API
 
 **What:** 实现异步任务提交和查询接口，解决长命令超时问题。
 
@@ -21,8 +21,8 @@ Project: out-of-container (容器远程命令执行系统)
 - 需要处理任务清理（LRU 淘汰）
 
 **Context:**
-- 新增 API: `/exec/async` (提交任务，返回 task_id)
-- 新增 API: `/exec/status?id=xxx` (查询任务状态)
+- 新增 API: `/ooc-exec/async` (提交任务，返回 task_id)
+- 新增 API: `/ooc-exec/status?id=xxx` (查询任务状态)
 - 实现内存任务队列，最多 100 个任务（LRU 淘汰）
 - Client 支持轮询模式
 
@@ -48,7 +48,7 @@ Project: out-of-container (容器远程命令执行系统)
 - 需要处理连接断开和重连
 
 **Context:**
-- 新增 API: `/exec/stream?id=xxx`
+- 新增 API: `/ooc-exec/stream?id=xxx`
 - HTTP handler 检查 `Accept: text/event-stream` 头
 - 复用 `MemoryTaskManager` 的任务状态
 
@@ -74,7 +74,7 @@ Project: out-of-container (容器远程命令执行系统)
 - 需要处理 token 更换期间的服务可用性
 
 **Context:**
-- 新增命令: `exec-server rotate-token --config ~/.config/exec-server/config.yaml`
+- 新增命令: `ooc-server rotate-token --config ~/.config/ooc-server/config.yaml`
 - 生成新 token，更新配置文件
 - 旧 token 在 5 分钟内仍然有效（平滑过渡）
 
@@ -331,7 +331,7 @@ Project: out-of-container (容器远程命令执行系统)
 
 **Context:**
 - 使用 mDNS广播：`_exec-server._tcp.local`
-- Client 扫描并询问：`exec-client discover`
+- Client 扫描并询问：`ooc-client discover`
 - 显示可用 server 列表
 
 **Depends on / blocked by:**
@@ -343,7 +343,7 @@ Project: out-of-container (容器远程命令执行系统)
 
 **What:** Client 支持交互模式，可以连续执行多个命令，保持会话上下文。
 
-**Why:** 当前每次调用 `exec-client exec` 都是独立请求，无法复用会话（环境变量、工作目录）。
+**Why:** 当前每次调用 `ooc-client exec` 都是独立请求，无法复用会话（环境变量、工作目录）。
 
 **Pros:**
 - 提升使用体验
@@ -354,7 +354,7 @@ Project: out-of-container (容器远程命令执行系统)
 - 需要管理会话状态
 
 **Context:**
-- 新增命令：`exec-client shell`
+- 新增命令：`ooc-client shell`
 - 交互式提示符：`exec-host> `
 - 命令：
   - `setwd /path/to/dir`（设置工作目录）

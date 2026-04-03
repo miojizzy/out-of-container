@@ -1,11 +1,31 @@
+# Out-of-Container Server Configuration Example
+# This is an example configuration file for ooc-server
+# Copy this to ~/.config/ooc-server/config.yaml and customize
+
 server:
+    # The address and port the server will listen on
+    # Use 0.0.0.0 to accept connections from any IP
+    # Use 127.0.0.1 to only accept local connections
     listen: "0.0.0.0:8080"
+
+    # Command execution timeout in seconds
+    # Commands that take longer will be terminated
     timeout_seconds: 30
+
+    # Maximum output size in MB
+    # Commands producing more output will be truncated
     max_output_mb: 10
+
+    # Maximum number of concurrent command executions
+    # Additional requests will be queued
     max_concurrent: 5
+
+    # API token for authentication
+    # Generate a secure token with: openssl rand -hex 32
     api_token: ""
 
 whitelist:
+    # Literal command whitelist - commands must match exactly
     literal_commands:
         - "make"
         - "cmake"
@@ -14,16 +34,30 @@ whitelist:
         - "python3"
         - "pytest"
 
+    # Regex command whitelist - commands are matched against regex patterns
+    # Note: Regex patterns need to be properly escaped
     regex_commands: []
 
+    # Allowed working directory paths
+    # Commands can only be executed in directories under these paths
     allowed_paths:
         - "/home/user/projects"
         - "/tmp/build"
 
+    # Configuration reload interval in seconds
+    # The server will check for configuration changes at this interval
     reload_interval_seconds: 5
 
 audit:
+    # Enable or disable audit logging
     enabled: true
-    log_file: "~/.local/share/exec-server/audit.log"
+
+    # Path to the audit log file
+    # The log file will be rotated when it reaches the size limit
+    log_file: "~/.local/share/ooc-server/audit.log"
+
+    # Maximum size of each log file in MB
     rotation_max_mb: 10
+
+    # Number of old log files to keep
     rotation_count: 10
