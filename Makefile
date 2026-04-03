@@ -85,8 +85,11 @@ release: clean build-linux
 	@mkdir -p release
 	@mv $(BINARY_SERVER)-linux-* release/
 	@mv $(BINARY_CLIENT)-linux-* release/
+	@cp skill/ooc-exec/SKILL.md release/
+	@cp README.md release/
+	@cp CLAUDE.md release/
 	@cd release && sha256sum * > checksums.txt
-	@echo "Release binaries in release/"
+	@echo "Release binaries and docs in release/"
 
 ## install-ooc-skill: Install ooc-client binary to the skill directory
 install-ooc-skill: build

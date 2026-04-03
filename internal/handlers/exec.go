@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/user/exec-server/internal/auditor"
 	"github.com/user/exec-server/internal/auth"
@@ -117,7 +118,7 @@ func (h *ExecHandler) handle(w http.ResponseWriter, r *http.Request) {
 		tokenPrefix := auth.GetTokenPrefix(token)
 
 		h.auditor.Log(&models.AuditEntry{
-			Timestamp:       r.Header.Get("X-Request-Time"),
+			Timestamp:       time.Now().Format(time.RFC3339),
 			Command:         cmd.Command,
 			Args:            cmd.Args,
 			Cwd:             cmd.Cwd,

@@ -303,7 +303,16 @@ go test -v ./...
 
 ### 安装技能
 
-#### 自动安装（推荐）
+#### 从 Release 安装（推荐）
+
+从 [GitHub Releases](https://github.com/user/out-of-container/releases) 下载技能包：
+
+1. 下载 `SKILL.md` 文件
+2. 创建目录：`mkdir -p ~/.claude/skills/ooc-exec`
+3. 将 `SKILL.md` 复制到该目录：`cp SKILL.md ~/.claude/skills/ooc-exec/`
+4. 下载对应的 `ooc-client` 二进制文件并将其放在技能目录中
+
+#### 自动安装
 
 ```bash
 # 从项目根目录运行

@@ -65,15 +65,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `/office-hours` - 产品思维和设计规划（已完成本次设计）
 - `/simplify` - 代码质量审查
 
-**容器命令执行：**
-- `/ooc-exec` - 在容器宿主机上执行命令（构建、测试、文件操作等）
-
 ## 技能路由
 
 当用户请求匹配可用技能时，始终使用 Skill 工具调用它作为第一个动作。
 
 关键路由规则：
-- 需要运行命令、查看文件、执行编译/构建/测试 → 调用 `/ooc-exec`
 - 错误、bug、"为什么坏了" → 调用 `/investigate`
 - QA、测试网站 → 调用 `/qa`
 - 代码审查 → 调用 `/review`

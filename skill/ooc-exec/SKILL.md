@@ -1,3 +1,15 @@
+---
+name: ooc-exec
+preamble-tier: 1
+version: 1.0.0
+description: |
+  Execute commands on the host machine from within a container. This skill bridges the gap between containerized development environments and host system command execution.
+allowed-tools:
+  - Bash
+  - Read
+
+---
+
 # ooc-exec: Out-of-Container Command Execution
 
 ## Preamble (run first)
