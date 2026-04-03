@@ -26,7 +26,7 @@ func main() {
 	// Expand config path
 	if *configPath == "" {
 		home, _ := os.UserHomeDir()
-		*configPath = home + "/.config/exec-server/config.yaml"
+		*configPath = home + "/.config/ooc-server/config.yaml"
 	}
 
 	loader := config.NewLoader(*configPath)
@@ -70,7 +70,7 @@ func main() {
 	)
 
 	mux := http.NewServeMux()
-	mux.Handle("/exec", execHandler)
+	mux.Handle("/ooc-exec", execHandler)
 	mux.HandleFunc("/health", handlers.HealthHandler)
 
 	// Setup graceful shutdown

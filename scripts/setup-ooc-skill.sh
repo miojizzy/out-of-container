@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# exec-skill-setup.sh - 交互式安装和配置脚本
-# 用于设置 .claude/skills/exec 技能和客户端配置
+# ooc-skill-setup.sh - 交互式安装和配置脚本
+# 用于设置 .claude/skills/ooc-exec 技能和客户端配置
 
 set -euo pipefail
 
@@ -39,15 +39,15 @@ check_prerequisites() {
         exit 1
     fi
 
-    # 检查 exec-client 二进制是否存在
-    if [[ ! -f "exec-client" ]]; then
-        print_error "未找到 exec-client 二进制文件，请先构建项目"
+    # 检查 ooc-client 二进制是否存在
+    if [[ ! -f "ooc-client" ]]; then
+        print_error "未找到 ooc-client 二进制文件，请先构建项目"
         exit 1
     fi
 
     # 检查技能目录
-    if [[ ! -d ".claude/skills/exec" ]]; then
-        print_error "未找到技能目录 .claude/skills/exec"
+    if [[ ! -d ".claude/skills/ooc-exec" ]]; then
+        print_error "未找到技能目录 .claude/skills/ooc-exec"
         exit 1
     fi
 
@@ -58,11 +58,11 @@ check_prerequisites() {
 install_skill_binary() {
     print_header "安装技能二进制文件"
 
-    local skill_bin_path=".claude/skills/exec/bin/exec-client"
+    local skill_bin_path=".claude/skills/ooc-exec/bin/ooc-client"
 
     # 复制二进制文件
-    echo "复制 exec-client 到技能目录..."
-    cp exec-client "$skill_bin_path"
+    echo "复制 ooc-client 到技能目录..."
+    cp ooc-client "$skill_bin_path"
     chmod +x "$skill_bin_path"
 
     # 验证
@@ -78,7 +78,7 @@ install_skill_binary() {
 configure_client() {
     print_header "配置客户端"
 
-    local config_dir="$HOME/.config/exec-client"
+    local config_dir="$HOME/.config/ooc-client"
     local config_file="$config_dir/config.yaml"
 
     # 创建配置目录
@@ -106,7 +106,7 @@ configure_client() {
     done
 
     # API Token
-    echo "API Token 可以在宿主机的 exec-server 配置文件中找到"
+    echo "API Token 可以在宿主机的 ooc-server 配置文件中找到"
     read -p "API Token: " api_token
     while [[ -z "$api_token" ]]; do
         print_warning "API Token 不能为空"
@@ -119,13 +119,13 @@ configure_client() {
 
     # 创建配置文件
     cat > "$config_file" <<EOF
-# exec-client 配置文件
+# ooc-client 配置文件
 # 由 setup-exec-skill.sh 脚本自动生成
 
-# 服务器 URL - 宿主机上 exec-server 的地址
+# 服务器 URL - 宿主机上 ooc-server 的地址
 server_url: "$server_url"
 
-# API Token - 从 exec-server 配置文件获取
+# API Token - 从 ooc-server 配置文件获取
 api_token: "$api_token"
 
 # 超时时间（秒）- 建议比 server 的 timeout 大 5 秒
@@ -139,8 +139,8 @@ EOF
 verify_configuration() {
     print_header "验证配置"
 
-    local config_file="$HOME/.config/exec-client/config.yaml"
-    local skill_bin_path=".claude/skills/exec/bin/exec-client"
+    local config_file="$HOME/.config/ooc-client/config.yaml"
+    local skill_bin_path=".claude/skills/ooc-exec/bin/ooc-client"
 
     # 检查配置文件
     if [[ ! -f "$config_file" ]]; then
@@ -174,7 +174,7 @@ verify_configuration() {
 test_connection() {
     print_header "测试连接"
 
-    local config_file="$HOME/.config/exec-client/config.yaml"
+    local config_file="$HOME/.config/ooc-client/config.yaml"
 
     # 检查配置文件
     if [[ ! -f "$config_file" ]]; then
@@ -280,7 +280,7 @@ main() {
             echo -e "${GREEN}Exec-Client 技能已成功安装和配置！${NC}"
             echo ""
             echo "现在你可以使用以下命令测试技能："
-            echo "  /exec command=\"echo\" args=\"Hello from container!\" cwd=\"/\""
+            echo "  /ooc-exec command=\"echo\" args=\"Hello from container!\" cwd=\"/\""
             echo ""
             echo "或者在项目根目录运行："
             echo "  make test-exec-skill"

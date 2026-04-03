@@ -54,7 +54,7 @@ func main() {
 	configFile := *configPath
 	if configFile == "" {
 		home, _ := os.UserHomeDir()
-		configFile = filepath.Join(home, ".config/exec-client/config.yaml")
+		configFile = filepath.Join(home, ".config/ooc-client/config.yaml")
 	}
 
 	var cfg ClientConfig
@@ -107,7 +107,7 @@ func main() {
 	}
 
 	body, _ := json.Marshal(req)
-	httpReq, _ := http.NewRequest("POST", cfg.ServerURL+"/exec", bytes.NewReader(body))
+	httpReq, _ := http.NewRequest("POST", cfg.ServerURL+"/ooc-exec", bytes.NewReader(body))
 	httpReq.Header.Set("Authorization", "Bearer "+cfg.ApiToken)
 	httpReq.Header.Set("Content-Type", "application/json")
 
