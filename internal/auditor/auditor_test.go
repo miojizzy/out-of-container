@@ -2,7 +2,6 @@ package auditor
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -43,7 +42,7 @@ func TestAuditor_Log(t *testing.T) {
 	}
 
 	// Read the log file
-	data, err := ioutil.ReadFile(logFile)
+	data, err := os.ReadFile(logFile)
 	if err != nil {
 		t.Fatalf("Failed to read log file: %v", err)
 	}
