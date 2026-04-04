@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     # 仅在 PR 被合并时运行
     if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
