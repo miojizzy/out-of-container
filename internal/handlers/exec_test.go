@@ -3,9 +3,10 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -35,7 +36,7 @@ whitelist:
   allowed_paths:
     - "/tmp"
 `
-	ioutil.WriteFile(configFile, []byte(configContent), 0644)
+	os.WriteFile(configFile, []byte(configContent), 0644)
 
 	// Create whitelist checker
 	whitelistChecker, err := whitelist.NewChecker(configFile)
@@ -81,7 +82,7 @@ whitelist:
 	}
 
 	// Read response body
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	t.Logf("Response body: %s", string(body))
 
 	// Close auditor to ensure logs are written
@@ -93,7 +94,7 @@ whitelist:
 	time.Sleep(100 * time.Millisecond)
 
 	// Read the log file
-	logData, err := ioutil.ReadFile(logFile)
+	logData, err := os.ReadFile(logFile)
 	if err != nil {
 		t.Fatalf("Failed to read log file: %v", err)
 	}
