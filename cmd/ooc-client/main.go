@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -93,9 +94,11 @@ func main() {
 	// Parse args
 	var argsList []string
 	if *args != "" {
-		if err := json.Unmarshal([]byte("["+*args+"]"), &argsList); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse args: %v\n", err)
-			os.Exit(1)
+		// Split comma-separated args into array
+		for _, arg := range strings.Split(*args, ",") {
+			if trimmed := strings.TrimSpace(arg); trimmed != "" {
+				argsList = append(argsList, trimmed)
+			}
 		}
 	}
 
