@@ -343,12 +343,17 @@ make exec-skill-setup
 # 执行简单命令
 /ooc-exec command="ls" cwd="/home/user"
 
-# 带参数的命令
-/ooc-exec command="go" args="test,-v" cwd="/app"
+# 带参数的命令（参数使用逗号分隔）
+/ooc-exec command="ls" args="-l,-rath" cwd="/home/user"
 
 # 复杂参数（JSON 数组格式）
 /ooc-exec command="python" args='["-m","pytest","tests/"]' cwd="/app"
 ```
+
+**参数说明：**
+- `command`：要执行的命令
+- `args`：命令参数，多个参数使用逗号分隔（注意不要在逗号前后加空格）
+- `cwd`：命令执行的工作目录
 
 ### 技能路由
 
