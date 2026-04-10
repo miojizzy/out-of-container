@@ -197,3 +197,18 @@ func (c *Checker) compileRules() error {
 	c.rules = rules
 	return nil
 }
+
+// GetConfig returns a copy of the current configuration
+// This is safe to call concurrently as it uses the internal mutex
+func (c *Checker) GetConfig() *models.Config {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+
+	if c.config == nil {
+		return nil
+	}
+
+	// Return a copy to prevent external modification
+	configCopy := *c.config
+	return &configCopy
+}
