@@ -113,6 +113,12 @@ timeout_seconds: 35
 
 # 覆盖配置
 ./ooc-client -server http://localhost:8080 -token your-token -command echo -cwd /tmp
+
+# 列出服务器允许的命令
+./ooc-client -server http://localhost:8080 -token your-token -list-commands
+
+# 列出服务器允许的路径
+./ooc-client -server http://localhost:8080 -token your-token -list-paths
 ```
 
 ## 配置说明
@@ -255,13 +261,15 @@ Client Request
     ↓
 TokenAuth Middleware (验证 token)
     ↓
-ConcurrencyLimiter Middleware (检查并发数)
+Route Handler (/ooc-exec 或 /whitelist-info)
     ↓
-WhitelistChecker (检查命令和白名单)
+ConcurrencyLimiter Middleware (检查并发数，仅 /ooc-exec)
     ↓
-Executor (执行命令，超时控制，输出限制)
+WhitelistChecker (检查命令和白名单，仅 /ooc-exec)
     ↓
-Auditor (记录审计日志)
+Executor (执行命令，超时控制，输出限制，仅 /ooc-exec)
+    ↓
+Auditor (记录审计日志，仅 /ooc-exec)
     ↓
 Response (返回结果)
 ```
@@ -348,12 +356,20 @@ make exec-skill-setup
 
 # 复杂参数（JSON 数组格式）
 /ooc-exec command="python" args='["-m","pytest","tests/"]' cwd="/app"
+
+# 列出可用命令
+/ooc-exec list-commands
+
+# 列出允许的路径
+/ooc-exec list-paths
 ```
 
 **参数说明：**
 - `command`：要执行的命令
 - `args`：命令参数，多个参数使用逗号分隔（注意不要在逗号前后加空格）
 - `cwd`：命令执行的工作目录
+- `list-commands`：列出服务器允许的命令
+- `list-paths`：列出服务器允许的路径
 
 ### 技能路由
 
