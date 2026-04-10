@@ -16,10 +16,28 @@ import (
 	"github.com/user/exec-server/internal/validation"
 )
 
+// CommandValidator 定义命令验证接口
+type CommandValidator interface {
+	CheckCommandSafety(command string) error
+	CheckArgsSafety(args []string) error
+}
+
+// defaultValidator 默认验证器
+type defaultValidator struct{}
+
+func (d *defaultValidator) CheckCommandSafety(command string) error {
+	return validation.CheckCommandSafety(command)
+}
+
+func (d *defaultValidator) CheckArgsSafety(args []string) error {
+	return validation.CheckArgsSafety(args)
+}
+
 // Executor handles command execution
 type Executor struct {
 	timeout        time.Duration
 	maxOutputBytes int64
+	validator      CommandValidator
 }
 
 // NewExecutor creates a new executor
@@ -27,6 +45,16 @@ func NewExecutor(timeoutSeconds int, maxOutputMB int64) *Executor {
 	return &Executor{
 		timeout:        time.Duration(timeoutSeconds) * time.Second,
 		maxOutputBytes: maxOutputMB * 1024 * 1024,
+		validator:      &defaultValidator{},
+	}
+}
+
+// NewExecutorWithValidator creates a new executor with custom validator (for testing)
+func NewExecutorWithValidator(timeoutSeconds int, maxOutputMB int64, validator CommandValidator) *Executor {
+	return &Executor{
+		timeout:        time.Duration(timeoutSeconds) * time.Second,
+		maxOutputBytes: maxOutputMB * 1024 * 1024,
+		validator:      validator,
 	}
 }
 
@@ -42,7 +70,7 @@ func (e *Executor) Execute(cmd *models.Command) *ExecuteResult {
 	startTime := time.Now()
 
 	// Validate command safety
-	if err := validation.CheckCommandSafety(cmd.Command); err != nil {
+	if err := e.validator.CheckCommandSafety(cmd.Command); err != nil {
 		return &ExecuteResult{
 			Error:     err,
 			HTTPError: http.StatusBadRequest,
@@ -50,7 +78,7 @@ func (e *Executor) Execute(cmd *models.Command) *ExecuteResult {
 	}
 
 	// Validate args safety
-	if err := validation.CheckArgsSafety(cmd.Args); err != nil {
+	if err := e.validator.CheckArgsSafety(cmd.Args); err != nil {
 		return &ExecuteResult{
 			Error:     err,
 			HTTPError: http.StatusBadRequest,
