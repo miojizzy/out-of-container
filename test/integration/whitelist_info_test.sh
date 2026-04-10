@@ -7,7 +7,7 @@
 # 3. 测试白名单信息端点的响应格式
 # 4. 测试客户端命令执行功能，确认它能够使用发现功能列出可用命令和路径
 
-set -e  # 遇到错误时退出，但我们会自己处理错误
+# 不使用set -e，因为我们想运行所有测试并报告结果
 
 # 颜色定义
 RED='\033[0;31m'
@@ -179,7 +179,7 @@ fi
 
 # 测试6: 客户端命令执行功能
 echo "测试6: 客户端命令执行功能"
-OUTPUT=$(./ooc-client -config "$CLIENT_CONFIG" -command "echo" -args "hello world" 2>&1)
+OUTPUT=$(./ooc-client -config "$CLIENT_CONFIG" -command "echo" -args "hello world" -cwd "$TEMP_DIR" 2>&1)
 if [ $? -eq 0 ] && echo "$OUTPUT" | grep -q "hello world"; then
     print_result 0 "客户端可以成功执行命令"
 else
