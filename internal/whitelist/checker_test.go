@@ -563,17 +563,15 @@ audit:
 	err = os.WriteFile(configPath, []byte(updatedConfig), 0644)
 	require.NoError(t, err)
 
-	// 手动触发重载：先loadConfig，然后compileRules
-	checker.mutex.Lock()
-	checker.loadConfig()
-	compileErr := checker.compileRules()
-	checker.mutex.Unlock()
-	assert.NoError(t, compileErr)
+	// 手动触发重载：直接调用 reloadConfig，不需要手动加锁
+	// 因为 reloadConfig 内部会正确处理锁
+	checker.reloadConfig()
+
+	// 等待一小段时间确保重载完成
+	time.Sleep(50 * time.Millisecond)
 
 	// 现在pwd命令应该被允许了
-	checker.mutex.Lock()
 	allowed, _, err = checker.IsAllowed("pwd", "/tmp")
-	checker.mutex.Unlock()
 	assert.True(t, allowed)
 	assert.NoError(t, err)
 }
