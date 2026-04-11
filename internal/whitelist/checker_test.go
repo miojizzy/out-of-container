@@ -1,6 +1,7 @@
 package whitelist
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -559,12 +560,23 @@ audit:
 	err = os.WriteFile(configPath, []byte(updatedConfig), 0644)
 	require.NoError(t, err)
 
-	// 手动触发重载：直接调用 reloadConfig，不需要手动加锁
-	// 因为 reloadConfig 内部会正确处理锁
-	checker.reloadConfig()
+	// 手动触发重载：直接调用 loadConfig 和 compileRules
+	// 先检查一下当前配置
+	config := checker.GetConfig()
+	fmt.Printf("Before reload - LiteralCommands: %v\n", config.Whitelist.LiteralCommands)
+
+	// 强制重载配置和规则
+	err = checker.loadConfig()
+	assert.NoError(t, err)
+	err = checker.compileRules()
+	assert.NoError(t, err)
 
 	// 等待一小段时间确保重载完成
 	time.Sleep(50 * time.Millisecond)
+
+	// 检查重载后配置
+	config = checker.GetConfig()
+	fmt.Printf("After reload - LiteralCommands: %v\n", config.Whitelist.LiteralCommands)
 
 	// 现在pwd命令应该被允许了
 	allowed, _, err = checker.IsAllowed("pwd", "/tmp")
