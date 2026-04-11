@@ -161,7 +161,11 @@ func (c *Checker) reloadConfig() {
 
 	if info.ModTime().After(lastMod) {
 		// File changed, reload
+		// Get current config with proper locking
+		c.mutex.RLock()
 		oldConfig := c.config
+		c.mutex.RUnlock()
+
 		if err := c.loadConfig(); err != nil {
 			// Keep old config on error
 			c.mutex.Lock()
