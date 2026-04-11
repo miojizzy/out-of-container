@@ -235,9 +235,9 @@ func TestGetConfig(t *testing.T) {
 	config := checker.GetConfig()
 	assert.NotNil(t, config)
 	assert.Equal(t, ":8080", config.Server.Listen)
-	assert.Equal(t, 3, len(config.Whitelist.LiteralCommands))  // ls, pwd, echo
-	assert.Equal(t, 2, len(config.Whitelist.RegexCommands))    // git, go
-	assert.Equal(t, 2, len(config.Whitelist.AllowedPaths))     // /tmp, /home
+	assert.Equal(t, 3, len(config.Whitelist.LiteralCommands)) // ls, pwd, echo
+	assert.Equal(t, 2, len(config.Whitelist.RegexCommands))   // git, go
+	assert.Equal(t, 2, len(config.Whitelist.AllowedPaths))    // /tmp, /home
 }
 
 func TestIsPathAllowed(t *testing.T) {
@@ -441,15 +441,15 @@ func TestRegexRuleComplex(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		command     string
-		expected    bool
+		command  string
+		expected bool
 	}{
 		{"git clone https://github.com/user/repo.git", true},
 		{"git clone -b main https://github.com/user/repo.git", true}, // 也应匹配 git clone
-		{"git pull origin main", true}, // 也应匹配 git pull
-		{"git fetch origin", true}, // 也应匹配 git fetch
-		{"go build -o main main.go", true}, // 也应匹配 go build
-		{"go test ./...", true}, // 也应匹配 go test
+		{"git pull origin main", true},                               // 也应匹配 git pull
+		{"git fetch origin", true},                                   // 也应匹配 git fetch
+		{"go build -o main main.go", true},                           // 也应匹配 go build
+		{"go test ./...", true},                                      // 也应匹配 go test
 	}
 	for _, tt := range tests {
 		t.Run(tt.command, func(t *testing.T) {

@@ -30,7 +30,6 @@ func (m *mockValidator) CheckArgsSafety(args []string) error {
 	return m.checkArgsErr
 }
 
-
 func TestNewExecutor(t *testing.T) {
 	tests := []struct {
 		name             string
@@ -49,7 +48,7 @@ func TestNewExecutor(t *testing.T) {
 		{
 			name:             "零值",
 			timeoutSec:       0,
-			maxOutputMB:       0,
+			maxOutputMB:      0,
 			expectedTimeout:  0,
 			expectedMaxBytes: 0,
 		},
@@ -169,7 +168,7 @@ func TestExecutor_Execute_ExitCode(t *testing.T) {
 }
 
 func TestExecutor_Execute_WithCwd(t *testing.T) {
-		tmpDir := t.TempDir()
+	tmpDir := t.TempDir()
 	e := NewExecutor(30, 10)
 
 	// 创建一个测试文件
@@ -194,7 +193,7 @@ func TestExecutor_Execute_WithCwd(t *testing.T) {
 }
 
 func TestExecutor_Execute_Timeout(t *testing.T) {
-		e := NewExecutor(1, 10) // 1秒超时
+	e := NewExecutor(1, 10) // 1秒超时
 
 	result := e.Execute(&models.Command{
 		Command: "sh",
@@ -220,7 +219,7 @@ func TestExecutor_Execute_Timeout(t *testing.T) {
 }
 
 func TestExecutor_Execute_CommandStartFailure(t *testing.T) {
-		e := NewExecutor(30, 10)
+	e := NewExecutor(30, 10)
 
 	// 使用不存在的命令
 	result := e.Execute(&models.Command{
@@ -244,7 +243,7 @@ func TestExecutor_Execute_CommandStartFailure(t *testing.T) {
 }
 
 func TestExecutor_Execute_OutputTruncation(t *testing.T) {
-		// 使用较小的限制来测试截断
+	// 使用较小的限制来测试截断
 	e := NewExecutor(30, 1) // 1MB限制
 
 	// 生成适量的输出用于测试
@@ -267,7 +266,7 @@ func TestExecutor_Execute_OutputTruncation(t *testing.T) {
 }
 
 func TestExecutor_Execute_CombinedOutputLimit(t *testing.T) {
-		// 使用很小的限制来测试共享计数器
+	// 使用很小的限制来测试共享计数器
 	e := NewExecutor(30, 1) // 1MB总输出限制
 
 	// 同时产生stdout和stderr
@@ -294,7 +293,7 @@ func TestExecutor_Execute_CombinedOutputLimit(t *testing.T) {
 }
 
 func TestExecutor_Execute_StderrOnly(t *testing.T) {
-		e := NewExecutor(30, 10)
+	e := NewExecutor(30, 10)
 
 	result := e.Execute(&models.Command{
 		Command: "sh",
@@ -311,7 +310,7 @@ func TestExecutor_Execute_StderrOnly(t *testing.T) {
 }
 
 func TestExecutor_Execute_DurationMs(t *testing.T) {
-		e := NewExecutor(30, 10)
+	e := NewExecutor(30, 10)
 
 	// 执行一个需要少量时间的命令
 	result := e.Execute(&models.Command{
@@ -421,52 +420,52 @@ func TestLimitedBuffer_WithSharedCounter(t *testing.T) {
 
 func TestSharedCounter_CanWrite(t *testing.T) {
 	tests := []struct {
-		name            string
-		maxBytes        int64
-		initialTotal    int64
-		writeSize       int64
+		name             string
+		maxBytes         int64
+		initialTotal     int64
+		writeSize        int64
 		expectedCanWrite bool
-		expectedTotal   int64
+		expectedTotal    int64
 	}{
 		{
-			name:            "initial write within limit",
-			maxBytes:        100,
-			initialTotal:    0,
-			writeSize:       50,
+			name:             "initial write within limit",
+			maxBytes:         100,
+			initialTotal:     0,
+			writeSize:        50,
 			expectedCanWrite: true,
-			expectedTotal:   50,
+			expectedTotal:    50,
 		},
 		{
-			name:            "write exactly at limit",
-			maxBytes:        100,
-			initialTotal:    50,
-			writeSize:       50,
+			name:             "write exactly at limit",
+			maxBytes:         100,
+			initialTotal:     50,
+			writeSize:        50,
 			expectedCanWrite: true,
-			expectedTotal:   100,
+			expectedTotal:    100,
 		},
 		{
-			name:            "write over limit",
-			maxBytes:        100,
-			initialTotal:    90,
-			writeSize:       20,
+			name:             "write over limit",
+			maxBytes:         100,
+			initialTotal:     90,
+			writeSize:        20,
 			expectedCanWrite: false,
-			expectedTotal:   90,
+			expectedTotal:    90,
 		},
 		{
-			name:            "zero write",
-			maxBytes:        100,
-			initialTotal:    0,
-			writeSize:       0,
+			name:             "zero write",
+			maxBytes:         100,
+			initialTotal:     0,
+			writeSize:        0,
 			expectedCanWrite: true,
-			expectedTotal:   0,
+			expectedTotal:    0,
 		},
 		{
-			name:            "zero limit",
-			maxBytes:        0,
-			initialTotal:    0,
-			writeSize:       1,
+			name:             "zero limit",
+			maxBytes:         0,
+			initialTotal:     0,
+			writeSize:        1,
 			expectedCanWrite: false,
-			expectedTotal:   0,
+			expectedTotal:    0,
 		},
 	}
 
@@ -639,11 +638,11 @@ func TestLimitedBuffer_EmptyWrites(t *testing.T) {
 func TestLimitedBuffer_MultipleWrites(t *testing.T) {
 	buf := &LimitedBuffer{maxBytes: 20}
 
-	buf.Write([]byte("12345"))  // 5 bytes
-	buf.Write([]byte("67890"))  // 5 bytes, total 10
-	buf.Write([]byte("abcde"))  // 5 bytes, total 15
-	buf.Write([]byte("fghij"))  // 5 bytes, total 20, exactly full
-	buf.Write([]byte("klmno"))  // should truncate after this
+	buf.Write([]byte("12345")) // 5 bytes
+	buf.Write([]byte("67890")) // 5 bytes, total 10
+	buf.Write([]byte("abcde")) // 5 bytes, total 15
+	buf.Write([]byte("fghij")) // 5 bytes, total 20, exactly full
+	buf.Write([]byte("klmno")) // should truncate after this
 
 	if buf.BytesWritten() != 20 {
 		t.Errorf("expected 20 bytes written, got %d", buf.BytesWritten())
@@ -676,7 +675,7 @@ func TestExecutor_Execute_EmptyCommand(t *testing.T) {
 }
 
 func TestExecutor_Execute_LongCommand(t *testing.T) {
-		e := NewExecutor(30, 100)
+	e := NewExecutor(30, 100)
 
 	// 测试带很多参数的命令
 	args := make([]string, 1000)
@@ -685,7 +684,7 @@ func TestExecutor_Execute_LongCommand(t *testing.T) {
 	}
 
 	result := e.Execute(&models.Command{
-		Command: "true",  // /bin/true，总是成功
+		Command: "true", // /bin/true，总是成功
 		Args:    args,
 		Cwd:     t.TempDir(),
 	})
@@ -697,7 +696,7 @@ func TestExecutor_Execute_LongCommand(t *testing.T) {
 }
 
 func TestExecutor_Execute_SignalTermination(t *testing.T) {
-		e := NewExecutor(30, 10)
+	e := NewExecutor(30, 10)
 
 	// 测试一个会被信号终止的命令
 	result := e.Execute(&models.Command{
@@ -712,7 +711,7 @@ func TestExecutor_Execute_SignalTermination(t *testing.T) {
 }
 
 func TestExecutor_Execute_Performance(t *testing.T) {
-		e := NewExecutor(30, 100)
+	e := NewExecutor(30, 100)
 
 	// 执行一些快速命令测试性能
 	commands := []*models.Command{
@@ -789,9 +788,9 @@ func TestLimitedBuffer_ExactLimit(t *testing.T) {
 func TestLimitedBuffer_OneByteOver(t *testing.T) {
 	buf := &LimitedBuffer{maxBytes: 10}
 
-	buf.Write([]byte("12345"))   // 5
-	buf.Write([]byte("67890"))   // 5, total 10 (full)
-	buf.Write([]byte("a"))       // 1 over, should trigger truncation
+	buf.Write([]byte("12345")) // 5
+	buf.Write([]byte("67890")) // 5, total 10 (full)
+	buf.Write([]byte("a"))     // 1 over, should trigger truncation
 
 	if buf.BytesWritten() != 10 {
 		t.Errorf("expected 10 bytes written, got %d", buf.BytesWritten())
@@ -822,7 +821,7 @@ func TestSharedCounter_Reset(t *testing.T) {
 // 集成测试
 
 func TestExecutor_Integration_MultipleCommands(t *testing.T) {
-		e := NewExecutor(30, 10)
+	e := NewExecutor(30, 10)
 
 	tests := []struct {
 		cmd     string
@@ -857,7 +856,7 @@ func TestExecutor_Integration_MultipleCommands(t *testing.T) {
 }
 
 func TestExecutor_Execute_ShellBuiltin(t *testing.T) {
-		e := NewExecutor(30, 10)
+	e := NewExecutor(30, 10)
 
 	// 测试shell内置命令（必须通过shell执行）
 	result := e.Execute(&models.Command{
@@ -875,7 +874,7 @@ func TestExecutor_Execute_ShellBuiltin(t *testing.T) {
 }
 
 func TestExecutor_Execute_MultipleArguments(t *testing.T) {
-		e := NewExecutor(30, 10)
+	e := NewExecutor(30, 10)
 
 	// 测试多参数命令
 	result := e.Execute(&models.Command{
@@ -895,7 +894,7 @@ func TestExecutor_Execute_MultipleArguments(t *testing.T) {
 // 测试zero值行为
 
 func TestExecutor_Execute_ZeroTimeout(t *testing.T) {
-		// 零超时应该立即超时
+	// 零超时应该立即超时
 	e := NewExecutor(0, 10)
 
 	result := e.Execute(&models.Command{
@@ -912,7 +911,7 @@ func TestExecutor_Execute_ZeroTimeout(t *testing.T) {
 }
 
 func TestExecutor_Execute_NegativeTimeout(t *testing.T) {
-		// 负数超时
+	// 负数超时
 	e := NewExecutor(-1, 10)
 
 	result := e.Execute(&models.Command{
@@ -937,7 +936,7 @@ func TestLimitedBuffer_String(t *testing.T) {
 
 // 大输出截断测试
 func TestExecutor_Execute_LargeOutputTruncation(t *testing.T) {
-		// 使用极小的限制来确保触发截断
+	// 使用极小的限制来确保触发截断
 	e := NewExecutor(30, 0) // 0MB = 无输出
 
 	result := e.Execute(&models.Command{
@@ -1074,8 +1073,8 @@ func TestExecuteResult_Structure(t *testing.T) {
 	result := &ExecuteResult{
 		Result: &models.Result{
 			ExitCode:   0,
-			Stdout:      "test stdout",
-			Stderr:      "test stderr",
+			Stdout:     "test stdout",
+			Stderr:     "test stderr",
 			DurationMs: 100,
 			Truncated:  false,
 			OutputSize: 20,
@@ -1102,7 +1101,7 @@ func TestLimitations(t *testing.T) {
 
 // 测试空命令（需要特殊处理，因为syscall会失败）
 func TestExecutor_Execute_EmptyCommandSafety(t *testing.T) {
-		e := NewExecutor(30, 10)
+	e := NewExecutor(30, 10)
 
 	// 空命令应该被验证拒绝
 	result := e.Execute(&models.Command{
@@ -1119,7 +1118,7 @@ func TestExecutor_Execute_EmptyCommandSafety(t *testing.T) {
 
 // 测试大量的stderr输出
 func TestExecutor_Execute_LargeStderr(t *testing.T) {
-		e := NewExecutor(30, 1) // 1MB限制
+	e := NewExecutor(30, 1) // 1MB限制
 
 	script := "for i in 1 2 3 4 5; do echo 'This is stderr line ' >&2; done"
 
@@ -1161,7 +1160,7 @@ func TestExecutor_Execute_BothOutputsLarge(t *testing.T) {
 
 // 测试快速成功的命令（关注性能）
 func TestExecutor_Execute_FastCommand(t *testing.T) {
-		e := NewExecutor(30, 10)
+	e := NewExecutor(30, 10)
 
 	// /bin/true应该立即返回
 	start := time.Now()
@@ -1185,10 +1184,9 @@ func TestExecutor_Execute_FastCommand(t *testing.T) {
 	}
 }
 
-
 // 测试只包含特殊字符的stdout
 func TestExecutor_Execute_SpecialCharsInOutput(t *testing.T) {
-		e := NewExecutor(30, 10)
+	e := NewExecutor(30, 10)
 
 	// 包含特殊字符的输出
 	script := "echo '特殊字符: 你好 こんにちは ñoño 🎉'"
@@ -1209,4 +1207,3 @@ func TestExecutor_Execute_SpecialCharsInOutput(t *testing.T) {
 		}
 	}
 }
-
