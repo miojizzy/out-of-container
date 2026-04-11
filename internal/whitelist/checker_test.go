@@ -529,16 +529,12 @@ audit:
 	require.NoError(t, err)
 
 	// 检查初始配置是否正确加载
-	checker.mutex.Lock()
 	allowed, _, err := checker.IsAllowed("ls", "/tmp")
-	checker.mutex.Unlock()
 	assert.True(t, allowed)
 	assert.NoError(t, err)
 
 	// 检查不被允许的命令
-	checker.mutex.Lock()
 	allowed, _, err = checker.IsAllowed("pwd", "/tmp")
-	checker.mutex.Unlock()
 	assert.False(t, allowed)
 	assert.Equal(t, ErrCommandNotInWhitelist, err)
 

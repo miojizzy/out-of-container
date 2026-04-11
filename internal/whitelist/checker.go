@@ -49,13 +49,22 @@ func NewChecker(configPath string) (*Checker, error) {
 
 // IsAllowed checks if command is in whitelist and cwd is allowed
 func (c *Checker) IsAllowed(command, cwd string) (bool, string, error) {
+	// First, check if we need to trigger a config reload (no lock needed)
+	needsReload := false
+	c.mutex.RLock()
+	if time.Since(c.lastMod) > time.Duration(c.config.Whitelist.ReloadIntervalSeconds)*time.Second {
+		needsReload = true
+	}
+	c.mutex.RUnlock()
+
+	// Trigger async reload outside of lock if needed
+	if needsReload {
+		go c.reloadConfig()
+	}
+
+	// Now check command and path under read lock with short duration
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
-
-	// Check if config needs reload
-	if time.Since(c.lastMod) > time.Duration(c.config.Whitelist.ReloadIntervalSeconds)*time.Second {
-		go c.reloadConfig() // Async reload
-	}
 
 	// Check command against rules
 	for _, rule := range c.rules {
