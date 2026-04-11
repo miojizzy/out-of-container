@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/user/exec-server/internal/auth"
@@ -74,7 +75,10 @@ func (h *WhitelistInfoHandler) handle(w http.ResponseWriter, r *http.Request) {
 	// 编码并发送响应
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		// 注意：此时响应可能已经部分写入，但这是最后一步
-		// 在发送响应头后出错只能记录日志
-		// 这里不需要特殊处理，因为客户端会收到不完整的响应
+		// 记录错误供调试，但无法返回更详细的错误信息给客户端
+		// 已在发送响应头后，只能记录日志
+		// 由于响应已部分发送，无法再更改HTTP状态码
+		// 只能记录错误供服务器端调试
+		log.Printf("Failed to encode whitelist info response: %v", err)
 	}
 }

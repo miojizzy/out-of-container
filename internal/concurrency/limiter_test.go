@@ -31,28 +31,28 @@ func slowHandler(duration time.Duration) http.HandlerFunc {
 // TestNewConcurrencyLimiter 测试创建并发限制器
 func TestNewConcurrencyLimiter(t *testing.T) {
 	tests := []struct {
-		name      string
-		max       int
-		wantMax   int
-		wantInit  int
+		name     string
+		max      int
+		wantMax  int
+		wantInit int
 	}{
 		{
-			name:      "创建限制器-最大并发5",
-			max:       5,
-			wantMax:   5,
-			wantInit:  0,
+			name:     "创建限制器-最大并发5",
+			max:      5,
+			wantMax:  5,
+			wantInit: 0,
 		},
 		{
-			name:      "创建限制器-最大并发1",
-			max:       1,
-			wantMax:   1,
-			wantInit:  0,
+			name:     "创建限制器-最大并发1",
+			max:      1,
+			wantMax:  1,
+			wantInit: 0,
 		},
 		{
-			name:      "创建限制器-最大并发10",
-			max:       10,
-			wantMax:   10,
-			wantInit:  0,
+			name:     "创建限制器-最大并发10",
+			max:      10,
+			wantMax:  10,
+			wantInit: 0,
 		},
 	}
 

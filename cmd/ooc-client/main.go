@@ -48,15 +48,15 @@ type ErrorResponse struct {
 }
 
 var (
-	serverURL      = flag.String("server", "", "Server URL")
-	apiToken       = flag.String("token", "", "API token")
-	command        = flag.String("command", "", "Command to execute")
-	args           = flag.String("args", "", "Command arguments (comma-separated)")
-	cwd            = flag.String("cwd", "", "Working directory")
-	configPath     = flag.String("config", "", "Config file path")
-	listCommands   = flag.Bool("list-commands", false, "List available commands from server")
-	listPaths      = flag.Bool("list-paths", false, "List allowed paths from server")
-	discoveryOnly  = flag.Bool("discovery-only", false, "Only perform discovery, don't execute commands")
+	serverURL     = flag.String("server", "", "Server URL")
+	apiToken      = flag.String("token", "", "API token")
+	command       = flag.String("command", "", "Command to execute")
+	args          = flag.String("args", "", "Command arguments (comma-separated)")
+	cwd           = flag.String("cwd", "", "Working directory")
+	configPath    = flag.String("config", "", "Config file path")
+	listCommands  = flag.Bool("list-commands", false, "List available commands from server")
+	listPaths     = flag.Bool("list-paths", false, "List allowed paths from server")
+	discoveryOnly = flag.Bool("discovery-only", false, "Only perform discovery, don't execute commands")
 )
 
 func main() {

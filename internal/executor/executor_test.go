@@ -30,10 +30,6 @@ func (m *mockValidator) CheckArgsSafety(args []string) error {
 	return m.checkArgsErr
 }
 
-// resetValidation 重置验证函数（保持接口兼容性）
-func resetValidation() {
-	// 不需要做任何事情，因为现在使用接口
-}
 
 func TestNewExecutor(t *testing.T) {
 	tests := []struct {
