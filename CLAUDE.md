@@ -64,6 +64,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **开发辅助：**
 - `/office-hours` - 产品思维和设计规划（已完成本次设计）
 - `/simplify` - 代码质量审查
+- `/document-release` - 更新文档（发布前用）
 
 **容器命令执行：**
 - `/ooc-exec` - 在容器宿主机上执行命令（构建、测试、文件操作等）

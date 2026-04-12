@@ -307,9 +307,12 @@ Project: out-of-container (容器远程命令执行系统)
   - 进程组清理
   - 配置热重载
   - 并发控制
+  - 客户端发现功能
 
 **Depends on / blocked by:**
 - Phase 1 代码实现
+
+**Completed:** 2026-04-10 - 已添加全面的单元测试和集成测试，包括客户端发现功能测试
 
 ---
 

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -16,10 +18,28 @@ import (
 	"github.com/user/exec-server/internal/validation"
 )
 
+// CommandValidator 定义命令验证接口
+type CommandValidator interface {
+	CheckCommandSafety(command string) error
+	CheckArgsSafety(args []string) error
+}
+
+// defaultValidator 默认验证器
+type defaultValidator struct{}
+
+func (d *defaultValidator) CheckCommandSafety(command string) error {
+	return validation.CheckCommandSafety(command)
+}
+
+func (d *defaultValidator) CheckArgsSafety(args []string) error {
+	return validation.CheckArgsSafety(args)
+}
+
 // Executor handles command execution
 type Executor struct {
 	timeout        time.Duration
 	maxOutputBytes int64
+	validator      CommandValidator
 }
 
 // NewExecutor creates a new executor
@@ -27,6 +47,16 @@ func NewExecutor(timeoutSeconds int, maxOutputMB int64) *Executor {
 	return &Executor{
 		timeout:        time.Duration(timeoutSeconds) * time.Second,
 		maxOutputBytes: maxOutputMB * 1024 * 1024,
+		validator:      &defaultValidator{},
+	}
+}
+
+// NewExecutorWithValidator creates a new executor with custom validator (for testing)
+func NewExecutorWithValidator(timeoutSeconds int, maxOutputMB int64, validator CommandValidator) *Executor {
+	return &Executor{
+		timeout:        time.Duration(timeoutSeconds) * time.Second,
+		maxOutputBytes: maxOutputMB * 1024 * 1024,
+		validator:      validator,
 	}
 }
 
@@ -42,7 +72,7 @@ func (e *Executor) Execute(cmd *models.Command) *ExecuteResult {
 	startTime := time.Now()
 
 	// Validate command safety
-	if err := validation.CheckCommandSafety(cmd.Command); err != nil {
+	if err := e.validator.CheckCommandSafety(cmd.Command); err != nil {
 		return &ExecuteResult{
 			Error:     err,
 			HTTPError: http.StatusBadRequest,
@@ -50,7 +80,7 @@ func (e *Executor) Execute(cmd *models.Command) *ExecuteResult {
 	}
 
 	// Validate args safety
-	if err := validation.CheckArgsSafety(cmd.Args); err != nil {
+	if err := e.validator.CheckArgsSafety(cmd.Args); err != nil {
 		return &ExecuteResult{
 			Error:     err,
 			HTTPError: http.StatusBadRequest,
@@ -153,6 +183,7 @@ func (e *Executor) Execute(cmd *models.Command) *ExecuteResult {
 // LimitedBuffer is a size-limited buffer with shared counter
 type LimitedBuffer struct {
 	bytes.Buffer
+	mutex         sync.Mutex // 保护对Buffer的并发访问
 	maxBytes      int64
 	bytesWritten  int64
 	truncated     bool
@@ -164,8 +195,11 @@ func (b *LimitedBuffer) SetSharedCounter(counter *SharedCounter) {
 	b.sharedCounter = counter
 }
 
-// Write implements io.Writer with size limiting
+// Write implements io.Writer with size limiting (线程安全)
 func (b *LimitedBuffer) Write(p []byte) (n int, err error) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
 	if b.truncated {
 		return len(p), nil // Discard if already truncated
 	}
@@ -179,9 +213,10 @@ func (b *LimitedBuffer) Write(p []byte) (n int, err error) {
 	}
 
 	// Check individual buffer limit
-	if b.bytesWritten+int64(len(p)) > b.maxBytes {
+	currentBytes := b.bytesWritten
+	if currentBytes+int64(len(p)) > b.maxBytes {
 		// Write only up to limit
-		remaining := b.maxBytes - b.bytesWritten
+		remaining := b.maxBytes - currentBytes
 		if remaining > 0 {
 			n, _ = b.Buffer.Write(p[:remaining])
 			b.bytesWritten += int64(n)
@@ -200,9 +235,9 @@ func (b *LimitedBuffer) IsTruncated() bool {
 	return b.truncated
 }
 
-// BytesWritten returns total bytes written
+// BytesWritten returns total bytes written (线程安全)
 func (b *LimitedBuffer) BytesWritten() int64 {
-	return b.bytesWritten
+	return atomic.LoadInt64(&b.bytesWritten)
 }
 
 // SharedCounter tracks total bytes across multiple writers
@@ -211,13 +246,18 @@ type SharedCounter struct {
 	total    int64
 }
 
-// CanWrite checks if we can write n more bytes
+// CanWrite checks if we can write n more bytes (线程安全)
 func (c *SharedCounter) CanWrite(n int64) bool {
-	if c.total+n > c.maxBytes {
-		return false
+	for {
+		current := atomic.LoadInt64(&c.total)
+		if current+n > c.maxBytes {
+			return false
+		}
+		if atomic.CompareAndSwapInt64(&c.total, current, current+n) {
+			return true
+		}
+		// 如果 CAS 失败，说明有其他goroutine修改了total，重试
 	}
-	c.total += n
-	return true
 }
 
 // ErrorResponse creates a JSON error response

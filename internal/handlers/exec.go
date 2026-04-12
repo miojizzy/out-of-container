@@ -53,24 +53,24 @@ func (h *ExecHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *ExecHandler) handle(w http.ResponseWriter, r *http.Request) {
 	// Only allow POST
 	if r.Method != http.MethodPost {
-		executor.ErrorResponse(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only POST is allowed")
+		ErrorResponse(w, http.StatusMethodNotAllowed, "method_not_allowed", "Only POST is allowed")
 		return
 	}
 
 	// Parse request
 	var cmd models.Command
 	if err := json.NewDecoder(r.Body).Decode(&cmd); err != nil {
-		executor.ErrorResponse(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body")
+		ErrorResponse(w, http.StatusBadRequest, "invalid_request", "Failed to parse JSON body")
 		return
 	}
 
 	// Validate request
 	if cmd.Command == "" {
-		executor.ErrorResponse(w, http.StatusBadRequest, "invalid_request", "command is required")
+		ErrorResponse(w, http.StatusBadRequest, "invalid_request", "command is required")
 		return
 	}
 	if cmd.Cwd == "" {
-		executor.ErrorResponse(w, http.StatusBadRequest, "invalid_request", "cwd is required")
+		ErrorResponse(w, http.StatusBadRequest, "invalid_request", "cwd is required")
 		return
 	}
 
@@ -78,14 +78,14 @@ func (h *ExecHandler) handle(w http.ResponseWriter, r *http.Request) {
 	_, ruleType, err := h.whitelist.IsAllowed(cmd.Command, cmd.Cwd)
 	if err != nil {
 		if err == whitelist.ErrCommandNotInWhitelist {
-			executor.ErrorResponse(w, http.StatusForbidden, "forbidden", "command not in whitelist")
+			ErrorResponse(w, http.StatusForbidden, "forbidden", "command not in whitelist")
 			return
 		}
 		if err == whitelist.ErrPathNotAllowed {
-			executor.ErrorResponse(w, http.StatusForbidden, "forbidden", "cwd not in allowed_paths")
+			ErrorResponse(w, http.StatusForbidden, "forbidden", "cwd not in allowed_paths")
 			return
 		}
-		executor.ErrorResponse(w, http.StatusInternalServerError, "internal_error", "whitelist check failed")
+		ErrorResponse(w, http.StatusInternalServerError, "internal_error", "whitelist check failed")
 		return
 	}
 
@@ -104,7 +104,7 @@ func (h *ExecHandler) handle(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintf(os.Stderr, "failed to encode timeout error response: %v\n", err)
 			}
 		} else {
-			executor.ErrorResponse(w, result.HTTPError, "execution_failed", result.Error.Error())
+			ErrorResponse(w, result.HTTPError, "execution_failed", result.Error.Error())
 		}
 		return
 	}

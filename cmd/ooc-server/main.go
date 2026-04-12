@@ -69,8 +69,14 @@ func main() {
 		cfg.Server.MaxConcurrent,
 	)
 
+	whitelistInfoHandler := handlers.NewWhitelistInfoHandler(
+		whitelistChecker,
+		cfg.Server.ApiToken,
+	)
+
 	mux := http.NewServeMux()
 	mux.Handle("/ooc-exec", execHandler)
+	mux.Handle("/whitelist-info", whitelistInfoHandler)
 	mux.HandleFunc("/health", handlers.HealthHandler)
 
 	// Setup graceful shutdown
