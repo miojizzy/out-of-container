@@ -46,9 +46,9 @@ The `ooc-exec` (Out-of-Container Execution) skill allows AI agents like Claude C
 ## Usage
 
 ```bash
-/ooc-exec command="ls" cwd="/home/user"
-/ooc-exec command="go" args="test,-v" cwd="/app"
-/ooc-exec command="make" args="build" cwd="/project"
+./ooc-client -command "ls" -cwd "/home/user"
+./ooc-client -command "go" -args "test,-v" -cwd "/app"
+./ooc-client -command "make" -args "build" -cwd "/project"
 ```
 
 ## Parameters
@@ -61,16 +61,16 @@ The `ooc-exec` (Out-of-Container Execution) skill allows AI agents like Claude C
 
 ```bash
 # List files in the home directory
-/ooc-exec command="ls" cwd="/home/user"
+./ooc-client -command "ls" -cwd "/home/user"
 
 # Run Go tests with verbose output
-/ooc-exec command="go" args="test,-v" cwd="/app"
+./ooc-client -command "go" -args "test,-v" -cwd "/app"
 
 # Build a project with Make
-/ooc-exec command="make" args="build" cwd="/project"
+./ooc-client -command "make" -args "build" -cwd "/project"
 
 # Run Python tests
-/ooc-exec command="python" args="-m,pytest,tests/" cwd="/app"
+./ooc-client -command "python" -args "-m,pytest,tests/" -cwd "/app"
 ```
 
 ## Security
