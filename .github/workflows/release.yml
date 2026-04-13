@@ -145,6 +145,7 @@ jobs:
             ooc-client-linux-amd64
             ooc-client-linux-arm64
             checksums.txt
+            skill/ooc-exec/SKILL.md
           draft: false
           prerelease: false
         env:
