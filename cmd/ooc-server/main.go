@@ -7,10 +7,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/user/exec-server/internal/auditor"
 	"github.com/user/exec-server/internal/executor"
 	"github.com/user/exec-server/internal/handlers"
+	"github.com/user/exec-server/internal/task"
 	"github.com/user/exec-server/internal/whitelist"
 	"github.com/user/exec-server/pkg/config"
 )
@@ -60,6 +62,20 @@ func main() {
 
 	exec := executor.NewExecutor(cfg.Server.TimeoutSeconds, cfg.Server.MaxOutputMB)
 
+	// Initialize task manager
+	taskStore := task.NewMemoryStore()
+	taskManager := task.NewTaskManager(
+		taskStore,
+		exec,
+		whitelistChecker,
+		aud,
+		time.Duration(cfg.Server.TaskTTLHours)*time.Hour,
+	)
+	defer taskManager.Close()
+
+	// Start task cleanup loop
+	taskManager.StartCleanupLoop(time.Hour)
+
 	// Setup handlers
 	execHandler := handlers.NewExecHandler(
 		exec,
@@ -74,10 +90,14 @@ func main() {
 		cfg.Server.ApiToken,
 	)
 
+	taskHandler := handlers.NewTaskHandler(taskManager)
+
 	mux := http.NewServeMux()
 	mux.Handle("/ooc-exec", execHandler)
 	mux.Handle("/whitelist-info", whitelistInfoHandler)
 	mux.HandleFunc("/health", handlers.HealthHandler)
+	mux.HandleFunc("/task", taskHandler.SubmitTask)
+	mux.HandleFunc("/task/", taskHandler.GetTaskStatus)
 
 	// Setup graceful shutdown
 	server := &http.Server{

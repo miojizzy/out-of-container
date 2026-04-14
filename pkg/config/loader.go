@@ -86,6 +86,7 @@ func (l *Loader) InitConfig() error {
 			MaxOutputMB:    10,
 			MaxConcurrent:  5,
 			ApiToken:       token,
+			TaskTTLHours:   24,
 		},
 		Whitelist: models.WhitelistConfig{
 			LiteralCommands: []string{
