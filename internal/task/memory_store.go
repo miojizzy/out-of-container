@@ -41,16 +41,16 @@ func (s *MemoryStore) Get(taskID string) (*Task, error) {
 
 	// 返回任务的副本以避免数据竞争
 	taskCopy := &Task{
-		ID:        task.ID,
-		Command:   task.Command,
-		Args:      task.Args,
-		Cwd:       task.Cwd,
-		Status:    task.Status,
-		CreatedAt: task.CreatedAt,
-		StartedAt: task.StartedAt,
+		ID:          task.ID,
+		Command:     task.Command,
+		Args:        task.Args,
+		Cwd:         task.Cwd,
+		Status:      task.Status,
+		CreatedAt:   task.CreatedAt,
+		StartedAt:   task.StartedAt,
 		CompletedAt: task.CompletedAt,
-		Result:    task.Result,
-		Error:     task.Error,
+		Result:      task.Result,
+		Error:       task.Error,
 	}
 	return taskCopy, nil
 }

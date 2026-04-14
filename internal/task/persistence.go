@@ -98,7 +98,9 @@ func (pm *PersistenceManager) Stop() {
 	}
 
 	// 立即保存一次
-	pm.save()
+	if err := pm.save(); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to save tasks on stop: %v\n", err)
+	}
 
 	pm.running = false
 }
@@ -154,7 +156,10 @@ func (pm *PersistenceManager) restore() error {
 	defer pm.mutex.Unlock()
 
 	for _, task := range tasks {
-		pm.store.Save(task)
+		if err := pm.store.Save(task); err != nil {
+			// 记录错误但继续恢复其他任务
+			fmt.Fprintf(os.Stderr, "Failed to save restored task %s: %v\n", task.ID, err)
+		}
 	}
 
 	return nil
