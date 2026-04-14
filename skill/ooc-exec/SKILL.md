@@ -46,16 +46,29 @@ The `ooc-exec` (Out-of-Container Execution) skill allows AI agents like Claude C
 ## Usage
 
 ```bash
+# Basic command execution
 ./ooc-client -command "ls" -cwd "/home/user"
-./ooc-client -command "go" -args "test,-v" -cwd "/app"
-./ooc-client -command "make" -args "build" -cwd "/project"
+
+# Command with arguments (JSON array format)
+./ooc-client -command "go" -args '["test","-v"]' -cwd "/app"
+./ooc-client -command "make" -args '["build"]' -cwd "/project"
+
+# Query available commands
+./ooc-client -server http://localhost:8080 -token YOUR_TOKEN -list-commands
+
+# Query allowed paths
+./ooc-client -server http://localhost:8080 -token YOUR_TOKEN -list-paths
 ```
 
 ## Parameters
 
 - `command` (required): The command to execute on the host
-- `args` (optional): Comma-separated arguments for the command
+- `args` (optional): Command arguments in JSON array format, e.g., `'["-v","-race"]'`
 - `cwd` (required): Working directory on the host where the command should run
+- `server` (optional): Override server URL from config file
+- `token` (optional): Override API token from config file
+- `list-commands` (optional): List all whitelisted commands on the server
+- `list-paths` (optional): List all allowed paths on the server
 
 ## Examples
 
@@ -63,14 +76,21 @@ The `ooc-exec` (Out-of-Container Execution) skill allows AI agents like Claude C
 # List files in the home directory
 ./ooc-client -command "ls" -cwd "/home/user"
 
-# Run Go tests with verbose output
-./ooc-client -command "go" -args "test,-v" -cwd "/app"
+# Run Go tests with verbose output and race detector
+./ooc-client -command "go" -args '["test","-v","-race"]' -cwd "/app"
 
 # Build a project with Make
-./ooc-client -command "make" -args "build" -cwd "/project"
+./ooc-client -command "make" -args '["build"]' -cwd "/project"
 
 # Run Python tests
-./ooc-client -command "python" -args "-m,pytest,tests/" -cwd "/app"
+./ooc-client -command "python" -args '["-m","pytest","tests/"]' -cwd "/app"
+
+# Compile C++ code with specific standard
+./ooc-client -command "g++" -args '["-std=c++17","main.cpp","-o","main"]' -cwd "/project"
+
+# Query server capabilities
+./ooc-client -list-commands
+./ooc-client -list-paths
 ```
 
 ## Security

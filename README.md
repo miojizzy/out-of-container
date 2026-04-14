@@ -102,11 +102,11 @@ timeout_seconds: 35
 ### 6. 执行命令
 
 ```bash
-# 基本用法
+# 基本用法 - 执行无参数命令
 ./ooc-client -command make -cwd /home/user/projects
 
-# 带参数
-./ooc-client -command g++ -args '"-std=c++17","main.cpp"' -cwd /home/user/projects
+# 带参数 - 使用 JSON 数组格式（推荐）
+./ooc-client -command g++ -args '["-std=c++17","main.cpp"]' -cwd /home/user/projects
 
 # 使用配置文件中的 server URL 和 token
 ./ooc-client -command pytest -cwd /home/user/projects
@@ -119,6 +119,9 @@ timeout_seconds: 35
 
 # 列出服务器允许的路径
 ./ooc-client -server http://localhost:8080 -token your-token -list-paths
+
+# 查看帮助
+./ooc-client -help
 ```
 
 ## 配置说明
@@ -366,10 +369,11 @@ make exec-skill-setup
 
 **参数说明：**
 - `command`：要执行的命令
-- `args`：命令参数，多个参数使用逗号分隔（注意不要在逗号前后加空格）
+- `args`：命令参数，使用 JSON 数组格式（推荐），例如：`'["-v","-race"]'`
 - `cwd`：命令执行的工作目录
 - `list-commands`：列出服务器允许的命令
 - `list-paths`：列出服务器允许的路径
+- `-server` / `-token` / `-config`：覆盖配置文件中的设置
 
 ### 技能路由
 
@@ -432,18 +436,116 @@ vim ~/.config/ooc-server/config.yaml
 - 短命令：检查命令是否卡住
 - 长命令：使用 Phase 2 的异步模式（开发中）
 
+## 异步任务 API
+
+本系统现已支持异步执行模式，适用于长时间运行的命令（编译、测试等）。
+
+### 异步执行流程
+
+1. **提交任务** - POST `/api/v1/tasks`
+   ```bash
+   # 提交异步任务
+   curl -X POST http://localhost:8080/api/v1/tasks \
+     -H "Authorization: Bearer YOUR_TOKEN" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "command": "make",
+       "args": ["build"],
+       "cwd": "/home/user/projects"
+     }'
+   
+   # 响应
+   {
+     "task_id": "task-123",
+     "status": "pending",
+     "message": "Task submitted successfully"
+   }
+   ```
+
+2. **查询任务状态** - GET `/api/v1/tasks/{task_id}`
+   ```bash
+   # 查询任务状态
+   curl http://localhost:8080/api/v1/tasks/task-123 \
+     -H "Authorization: Bearer YOUR_TOKEN"
+   
+   # 响应
+   {
+     "id": "task-123",
+     "command": "make",
+     "args": ["build"],
+     "cwd": "/home/user/projects",
+     "status": "completed",
+     "result": {
+       "exit_code": 0,
+       "stdout": "Build successful\n",
+       "stderr": "",
+       "duration_ms": 5234,
+       "truncated": false
+     },
+     "created_at": "2026-04-14T04:00:00Z",
+     "started_at": "2026-04-14T04:00:01Z",
+     "completed_at": "2026-04-14T04:00:06Z"
+   }
+   ```
+
+### 任务状态
+
+- `pending` - 任务已提交，等待执行
+- `running` - 任务正在执行
+- `completed` - 任务成功完成
+- `failed` - 任务执行失败
+- `timeout` - 任务执行超时
+
+### 使用场景
+
+**适合异步执行的场景：**
+- 长时间编译（大型项目、C++ 编译）
+- 完整测试套件
+- 批量文件处理
+- 持续集成任务
+
+**使用 Client 查询任务：**
+```bash
+# 提交异步任务（client 会等待完成）
+./ooc-client -command make -args '["build"]' -cwd /home/user/projects
+
+# 注意：当前 client 是同步阻塞的
+# 异步模式需要直接调用 HTTP API 或扩展 client 功能
+```
+
+### 任务持久化
+
+服务支持任务持久化到磁盘，重启后可恢复任务状态：
+
+```yaml
+persistence:
+  enabled: true
+  file_path: "~/.local/share/ooc-server/tasks.json"
+  save_interval_seconds: 60
+  task_ttl: "24h"
+```
+
+### 任务清理
+
+系统会自动清理过期任务：
+- 已完成任务：超过 TTL（默认 24 小时）后自动清理
+- 挂起任务：超过 TTL 未开始执行的任务也会被清理
+- 清理间隔：可通过 `cleanup_interval` 配置
+
 ## 后续计划
 
 详见 `TODOS.md`。
 
-**Phase 2（计划中）：**
-- 异步执行模式（`/exec/async` + `/exec/status`）
-- 任务队列（LRU 淘汰）
-- Client 轮询支持
+**Phase 2（已完成）：**
+- ✅ 异步执行模式（`/api/v1/tasks` + `/api/v1/tasks/{id}`）
+- ✅ 任务持久化（JSON 文件存储）
+- ✅ 任务队列管理
+- ✅ 自动清理过期任务
 
 **Phase 3（计划中）：**
-- SSE 流式输出（`/exec/stream`）
+- SSE 流式输出（`/api/v1/tasks/{id}/stream`）
 - 实时查看命令执行过程
+- Client 异步模式支持
 
 ## 贡献
 
