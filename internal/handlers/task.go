@@ -98,9 +98,9 @@ func (h *TaskHandler) GetTaskStatus(w http.ResponseWriter, r *http.Request) {
 
 	// Build response
 	response := &task.TaskStatusResponse{
-		TaskID:      taskObj.ID,
-		Status:      taskObj.Status,
-		CreatedAt:   taskObj.CreatedAt,
+		TaskID:    taskObj.ID,
+		Status:    taskObj.Status,
+		CreatedAt: taskObj.CreatedAt,
 	}
 
 	if taskObj.StartedAt != nil {

@@ -42,10 +42,10 @@ func NewPersistenceManager(store TaskStore, config PersistenceConfig) *Persisten
 	}
 
 	return &PersistenceManager{
-		store:      store,
-		config:     config,
-		filePath:   config.FilePath,
-		running:    false,
+		store:    store,
+		config:   config,
+		filePath: config.FilePath,
+		running:  false,
 	}
 }
 
