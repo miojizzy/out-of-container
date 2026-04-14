@@ -1,17 +1,18 @@
+version: 2
+
 linters:
   enable:
-    - gofmt
     - govet
     - errcheck
     - staticcheck
     - unused
-    - gosimple
     - ineffassign
-    - typecheck
 
 linters-settings:
-  gofmt:
-    simplify: true
+  govet:
+    # Enable all checks
+    checks:
+      - all
 
 issues:
   exclude-rules:

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -17,13 +18,34 @@ import (
 	"github.com/user/exec-server/pkg/config"
 )
 
+// 版本信息，在构建时通过 -ldflags 注入
+var (
+	Version   = "dev"
+	BuildTime = ""
+)
+
+func init() {
+	// 如果 BuildTime 未设置，使用当前时间
+	if BuildTime == "" {
+		BuildTime = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	}
+}
+
 var (
 	configPath = flag.String("config", "", "Path to config file")
 	initMode   = flag.Bool("init", false, "Initialize config file")
+	version    = flag.Bool("version", false, "Show version information")
 )
 
 func main() {
 	flag.Parse()
+
+	// 显示版本信息
+	if *version {
+		fmt.Printf("ooc-server version %s\n", Version)
+		fmt.Printf("Build time: %s\n", BuildTime)
+		os.Exit(0)
+	}
 
 	// Expand config path
 	if *configPath == "" {

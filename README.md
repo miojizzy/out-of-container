@@ -308,6 +308,59 @@ go test -v ./...
 - `pkg/` - 公共库代码（可被外部引用）
 - `config/` - 配置文件示例
 
+## CI/CD
+
+本项目使用 GitHub Actions 实现持续集成和持续部署。
+
+### 工作流程
+
+```mermaid
+graph LR
+    A[PR 提交/更新] --> B[运行 Test + Lint]
+    B --> C{通过检查?}
+    C -->|是| D[允许合并]
+    C -->|否| E[阻止合并]
+    
+    D --> F[PR 合并到 main]
+    F --> G[自动打 Tag]
+    G --> H[触发 Release 构建]
+    H --> I[发布到 GitHub Releases]
+    
+    style B fill:#e1f5fe
+    style G fill:#fff3e0
+    style I fill:#e8f5e8
+```
+
+### 触发条件
+
+1. **PR 提交或更新** → 触发 `ci.yml`
+   - 运行 `go test`（包含 `-race` 检测）
+   - 运行 `golangci-lint`
+   - 上传测试覆盖率到 Codecov
+
+2. **PR 合并到 main** → 触发 `auto-tag-on-merge.yml`
+   - 自动递增版本号（patch++）
+   - 创建 Git tag（格式：`vMAJOR.MINOR.PATCH`）
+   - 创建 GitHub Release 页面
+
+3. **推送 tag（v*）** → 触发 `release.yml`
+   - 构建 server 和 client 二进制文件（amd64/arm64）
+   - 生成 SHA256 checksums
+   - 发布到 GitHub Releases（包含 skill 文档）
+
+### 版本管理
+
+- **语义化版本**：`vMAJOR.MINOR.PATCH`（例如 v1.02.003）
+- **自动递增**：每次 PR 合并自动递增 PATCH 版本
+- **手动发布**：通过推送 tag 触发 release 构建
+
+### 最佳实践
+
+1. **提交前**：本地运行 `make test` 和 `make lint`
+2. **PR 描述**：详细描述变更内容和测试结果
+3. **Code Review**：确保至少一人审核通过
+4. **合并策略**：使用 "Squash and merge" 保持历史清晰
+
 ## Claude Code 技能集成
 
 本项目提供了一个 [Claude Code](https://claude.ai/code) 技能，让 AI agent 能够直接在容器中执行命令。

@@ -121,3 +121,115 @@ timeout_seconds: 35
 4. Ensure the server has the necessary command whitelists configured
 
 For detailed installation instructions, see the project README.
+
+## Update
+
+Automatically update `ooc-client` binary and skill documentation to the latest release from GitHub.
+
+### Update Command
+
+```bash
+# Update to the latest version
+update-ooc-exec
+```
+
+### Update Process
+
+The update process performs the following steps:
+
+1. **Check current version**
+   ```bash
+   ./ooc-client -version 2>/dev/null || echo "Not installed or version unknown"
+   ```
+
+2. **Fetch latest release information**
+   ```bash
+   # Get latest release metadata from GitHub API
+   LATEST_RELEASE=$(curl -s https://api.github.com/repos/miojizzy/out-of-container/releases/latest)
+   LATEST_VERSION=$(echo "$LATEST_RELEASE" | jq -r '.tag_name')
+   DOWNLOAD_URL=$(echo "$LATEST_RELEASE" | jq -r '.assets[] | select(.name | test("ooc-client-linux-")) | .browser_download_url')
+   SKILL_URL=$(echo "$LATEST_RELEASE" | jq -r '.assets[] | select(.name == "SKILL.md") | .browser_download_url')
+   ```
+
+3. **Download latest binaries**
+   ```bash
+   # Determine architecture
+   ARCH=$(uname -m)
+   case $ARCH in
+     x86_64) BINARY="ooc-client-linux-amd64" ;;
+     aarch64) BINARY="ooc-client-linux-arm64" ;;
+     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+   esac
+
+   # Download binary
+   curl -L -o ooc-client "https://github.com/miojizzy/out-of-container/releases/download/${LATEST_VERSION}/${BINARY}"
+   chmod +x ooc-client
+   ```
+
+4. **Download latest skill documentation**
+   ```bash
+   # Download SKILL.md
+   curl -L -o SKILL.md "https://github.com/miojizzy/out-of-container/releases/download/${LATEST_VERSION}/SKILL.md"
+   ```
+
+5. **Verify installation**
+   ```bash
+   # Verify binary is executable
+   ./ooc-client -version
+
+   # Verify checksum (optional but recommended)
+   curl -L -o checksums.txt "https://github.com/miojizzy/out-of-container/releases/download/${LATEST_VERSION}/checksums.txt"
+   sha256sum -c checksums.txt --ignore-missing
+   ```
+
+6. **Replace local files**
+   ```bash
+   # Backup current version (optional)
+   [ -f "./ooc-client" ] && mv ./ooc-client ./ooc-client.backup
+   [ -f "./SKILL.md" ] && mv ./SKILL.md ./SKILL.md.backup
+
+   # Replace with new version
+   mv ooc-client ./ooc-client
+   mv SKILL.md ./SKILL.md
+
+   echo "Updated to version: $LATEST_VERSION"
+   ```
+
+### Manual Update
+
+If automatic update fails, perform manual update:
+
+```bash
+# 1. Get latest version from GitHub
+open https://github.com/miojizzy/out-of-container/releases/latest
+
+# 2. Download files manually
+# - ooc-client-linux-amd64 (or arm64)
+# - SKILL.md
+# - checksums.txt
+
+# 3. Verify checksum
+sha256sum -c checksums.txt --ignore-missing
+
+# 4. Install
+chmod +x ooc-client-linux-*
+mv ooc-client-linux-* ooc-client
+```
+
+### Version Check
+
+Check current installed version:
+
+```bash
+./ooc-client -version
+```
+
+Compare with latest available version:
+
+```bash
+# Latest version from GitHub
+curl -s https://api.github.com/repos/miojizzy/out-of-container/releases/latest | jq -r '.tag_name'
+
+# Current version
+./ooc-client -version 2>/dev/null || echo "Not installed"
+```

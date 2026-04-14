@@ -10,9 +10,23 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
+
+// 版本信息，在构建时通过 -ldflags 注入
+var (
+	Version   = "dev"
+	BuildTime = ""
+)
+
+func init() {
+	// 如果 BuildTime 未设置，使用当前时间
+	if BuildTime == "" {
+		BuildTime = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	}
+}
 
 // WhitelistInfoResponse 白名单信息发现响应结构体
 type WhitelistInfoResponse struct {
@@ -57,10 +71,18 @@ var (
 	listCommands  = flag.Bool("list-commands", false, "List available commands from server")
 	listPaths     = flag.Bool("list-paths", false, "List allowed paths from server")
 	discoveryOnly = flag.Bool("discovery-only", false, "Only perform discovery, don't execute commands")
+	version       = flag.Bool("version", false, "Show version information")
 )
 
 func main() {
 	flag.Parse()
+
+	// 显示版本信息
+	if *version {
+		fmt.Printf("ooc-client version %s\n", Version)
+		fmt.Printf("Build time: %s\n", BuildTime)
+		os.Exit(0)
+	}
 
 	// Load config
 	configFile := *configPath
