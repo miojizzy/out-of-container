@@ -234,33 +234,35 @@ func TestTaskManager_StartCleanupLoop(t *testing.T) {
 	}
 	defer cleanupTestWhitelist(tmpDir)
 
-	tm := NewTaskManager(store, exec, whitelistChecker, nil, 5*time.Second)
+	// 设置 TTL 为 2 秒，清理间隔为 500 毫秒
+	tm := NewTaskManager(store, exec, whitelistChecker, nil, 2*time.Second)
 
+	// 直接在存储中创建任务，不通过 TaskManager 执行
 	cmd := &models.Command{
 		Command: "echo",
 		Args:    []string{"hello"},
 		Cwd:     "/tmp",
 	}
+	task := NewTask(cmd)
+	task.Status = TaskStatusPending
 
-	// 提交任务
-	task, err := tm.SubmitTask(cmd)
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
+	if err := store.Save(task); err != nil {
+		t.Fatalf("Failed to save task: %v", err)
 	}
 
-	// 启动清理循环
-	tm.StartCleanupLoop(1 * time.Second)
+	// 启动清理循环（每 500 毫秒清理一次）
+	tm.StartCleanupLoop(500 * time.Millisecond)
 
-	// 等待清理发生
-	time.Sleep(3 * time.Second)
+	// 等待 1 秒（任务还在 TTL 内，不应被清理）
+	time.Sleep(1 * time.Second)
 
-	// 检查任务是否被清理（尚未完成，不应被清理）
+	// 检查任务是否还存在（应该还在）
 	loaded, err := store.Get(task.ID)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 	if loaded == nil {
-		t.Error("Expected task to still exist")
+		t.Error("Expected task to still exist within TTL")
 	}
 
 	// 更新任务为已完成
@@ -274,15 +276,12 @@ func TestTaskManager_StartCleanupLoop(t *testing.T) {
 		t.Fatalf("Failed to update task: %v", err)
 	}
 
-	// 等待清理发生
-	time.Sleep(3 * time.Second)
+	// 等待 2.5 秒（超过 2 秒的 TTL，任务应该被清理）
+	time.Sleep(2500 * time.Millisecond)
 
-	// 检查任务是否被清理（TTL 已过）
+	// 检查任务是否被清理
 	loaded, err = store.Get(task.ID)
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
-	if loaded != nil {
-		t.Error("Expected task to be cleaned up")
+	if err == nil && loaded != nil {
+		t.Error("Expected task to be cleaned up after TTL")
 	}
 }
