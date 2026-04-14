@@ -16,6 +16,7 @@ type ServerConfig struct {
 	MaxOutputMB    int64  `yaml:"max_output_mb"`
 	MaxConcurrent  int    `yaml:"max_concurrent"`
 	ApiToken       string `yaml:"api_token"`
+	TaskTTLHours   int    `yaml:"task_ttl_hours"`
 }
 
 // WhitelistConfig represents whitelist rules
