@@ -38,7 +38,21 @@ func (s *MemoryStore) Get(taskID string) (*Task, error) {
 	if !exists {
 		return nil, ErrTaskNotFound
 	}
-	return task, nil
+
+	// 返回任务的副本以避免数据竞争
+	taskCopy := &Task{
+		ID:        task.ID,
+		Command:   task.Command,
+		Args:      task.Args,
+		Cwd:       task.Cwd,
+		Status:    task.Status,
+		CreatedAt: task.CreatedAt,
+		StartedAt: task.StartedAt,
+		CompletedAt: task.CompletedAt,
+		Result:    task.Result,
+		Error:     task.Error,
+	}
+	return taskCopy, nil
 }
 
 // Update 更新任务状态和结果

@@ -89,13 +89,19 @@ func TestTaskManager_SubmitTask(t *testing.T) {
 	}
 
 	// 测试成功提交
-	task, err := tm.SubmitTask(cmd)
+	submittedTask, err := tm.SubmitTask(cmd)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	if task == nil {
+	if submittedTask == nil {
 		t.Fatal("Expected task to be returned")
+	}
+
+	// 从存储中获取任务检查状态（避免数据竞争）
+	task, err := store.Get(submittedTask.ID)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
 	}
 
 	if task.Status != TaskStatusPending {
@@ -276,8 +282,9 @@ func TestTaskManager_StartCleanupLoop(t *testing.T) {
 		t.Fatalf("Failed to update task: %v", err)
 	}
 
-	// 等待 2.5 秒（超过 2 秒的 TTL，任务应该被清理）
-	time.Sleep(2500 * time.Millisecond)
+	// 等待 3 秒（从完成时间算起超过 2 秒 TTL）
+	// 这确保了从 CompletedAt 开始的时间已经超过了 TTL
+	time.Sleep(3 * time.Second)
 
 	// 检查任务是否被清理
 	loaded, err = store.Get(task.ID)
