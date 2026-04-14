@@ -28,6 +28,7 @@ func TestMemoryStore_Save(t *testing.T) {
 	}
 	if loaded == nil {
 		t.Error("Expected task to be loaded, got nil")
+		return
 	}
 	if loaded.ID != task.ID {
 		t.Errorf("Expected task ID %s, got %s", task.ID, loaded.ID)
