@@ -1,5 +1,3 @@
-version: 2
-
 linters:
   enable:
     - govet
@@ -11,8 +9,7 @@ linters:
 linters-settings:
   govet:
     # Enable all checks
-    checks:
-      - all
+    enable-all: true
 
 issues:
   exclude-rules:
