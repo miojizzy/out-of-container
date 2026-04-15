@@ -49,7 +49,10 @@ func main() {
 
 	// Expand config path
 	if *configPath == "" {
-		home, _ := os.UserHomeDir()
+		home, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatalf("Failed to get user home directory: %v", err)
+		}
 		*configPath = home + "/.config/ooc-server/config.yaml"
 	}
 
@@ -75,12 +78,19 @@ func main() {
 		log.Fatalf("Failed to initialize whitelist checker: %v", err)
 	}
 
-	aud := auditor.NewAuditor(
+	aud, err := auditor.NewAuditor(
 		cfg.Audit.LogFile,
 		cfg.Audit.RotationMaxMB,
 		cfg.Audit.RotationCount,
 	)
-	defer aud.Close()
+	if err != nil {
+		log.Fatalf("Failed to initialize auditor: %v", err)
+	}
+	defer func() {
+		if err := aud.Close(); err != nil {
+			log.Printf("Failed to close auditor: %v\n", err)
+		}
+	}()
 
 	exec := executor.NewExecutor(cfg.Server.TimeoutSeconds, cfg.Server.MaxOutputMB)
 

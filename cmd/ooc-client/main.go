@@ -87,7 +87,12 @@ func main() {
 	// Load config
 	configFile := *configPath
 	if configFile == "" {
-		home, _ := os.UserHomeDir()
+		home, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to get user home directory: %v\n", err)
+			printHelp()
+			os.Exit(1)
+		}
 		configFile = filepath.Join(home, ".config/ooc-client/config.yaml")
 	}
 
@@ -153,8 +158,16 @@ func main() {
 		Cwd:     *cwd,
 	}
 
-	body, _ := json.Marshal(req)
-	httpReq, _ := http.NewRequest("POST", cfg.ServerURL+"/ooc-exec", bytes.NewReader(body))
+	body, err := json.Marshal(req)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to marshal request: %v\n", err)
+		os.Exit(1)
+	}
+	httpReq, err := http.NewRequest("POST", cfg.ServerURL+"/ooc-exec", bytes.NewReader(body))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create request: %v\n", err)
+		os.Exit(1)
+	}
 	httpReq.Header.Set("Authorization", "Bearer "+cfg.ApiToken)
 	httpReq.Header.Set("Content-Type", "application/json")
 
@@ -164,9 +177,17 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Request failed: %v\n", err)
 		os.Exit(1)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to close response body: %v\n", err)
+		}
+	}()
 
-	respBody, _ := io.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to read response body: %v\n", err)
+		os.Exit(1)
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp ErrorResponse
@@ -235,7 +256,11 @@ func fetchWhitelistInfo(cfg ClientConfig) (*WhitelistInfoResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to close response body: %v\n", err)
+		}
+	}()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
