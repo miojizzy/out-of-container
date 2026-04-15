@@ -43,7 +43,7 @@ func (l *Loader) Load() (*models.Config, error) {
 
 // validate checks config validity
 func (l *Loader) validate(config *models.Config) error {
-	if config.Server.ApiToken == "" {
+	if config.Server.APIToken == "" {
 		return fmt.Errorf("api_token is required")
 	}
 
@@ -85,7 +85,7 @@ func (l *Loader) InitConfig() error {
 			TimeoutSeconds: 30,
 			MaxOutputMB:    10,
 			MaxConcurrent:  5,
-			ApiToken:       token,
+			APIToken:       token,
 			TaskTTLHours:   24,
 		},
 		Whitelist: models.WhitelistConfig{

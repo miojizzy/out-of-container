@@ -38,7 +38,7 @@ type WhitelistInfoResponse struct {
 
 type ClientConfig struct {
 	ServerURL     string `yaml:"server_url"`
-	ApiToken      string `yaml:"api_token"`
+	APIToken      string `yaml:"api_token"`
 	TimeoutSecond int    `yaml:"timeout_seconds"`
 }
 
@@ -108,7 +108,7 @@ func main() {
 		cfg.ServerURL = *serverURL
 	}
 	if *apiToken != "" {
-		cfg.ApiToken = *apiToken
+		cfg.APIToken = *apiToken
 	}
 
 	// Validate
@@ -117,7 +117,7 @@ func main() {
 		printHelp()
 		os.Exit(1)
 	}
-	if cfg.ApiToken == "" {
+	if cfg.APIToken == "" {
 		fmt.Fprintln(os.Stderr, "API token required (set in config or use -token flag)")
 		printHelp()
 		os.Exit(1)
@@ -168,7 +168,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to create request: %v\n", err)
 		os.Exit(1)
 	}
-	httpReq.Header.Set("Authorization", "Bearer "+cfg.ApiToken)
+	httpReq.Header.Set("Authorization", "Bearer "+cfg.APIToken)
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -249,7 +249,7 @@ func fetchWhitelistInfo(cfg ClientConfig) (*WhitelistInfoResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+cfg.ApiToken)
+	req.Header.Set("Authorization", "Bearer "+cfg.APIToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

@@ -110,13 +110,13 @@ func main() {
 		exec,
 		whitelistChecker,
 		aud,
-		cfg.Server.ApiToken,
+		cfg.Server.APIToken,
 		cfg.Server.MaxConcurrent,
 	)
 
 	whitelistInfoHandler := handlers.NewWhitelistInfoHandler(
 		whitelistChecker,
-		cfg.Server.ApiToken,
+		cfg.Server.APIToken,
 	)
 
 	taskHandler := handlers.NewTaskHandler(taskManager)
@@ -139,7 +139,9 @@ func main() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 		log.Println("Shutting down server...")
-		server.Close()
+		if err := server.Close(); err != nil {
+			log.Printf("Server shutdown error: %v\n", err)
+		}
 	}()
 
 	// Start server
