@@ -1,25 +1,130 @@
-version: 2
+# golangci-lint 配置 - 本项目推荐配置
+# 文档: https://golangci-lint.run/usage/configuration/
 
+# Linters 配置
 linters:
   enable:
-    - govet
-    - errcheck
-    - staticcheck
-    - unused
-    - ineffassign
+    # === 核心检查器（必须） ===
+    - errcheck      # 检查未处理的错误返回值（避免错误被忽略）
+    - govet         # Go vet 检查（Go 官方静态分析）
+    - staticcheck   # 静态分析检查（发现潜在 bug）
+    - unused        # 检查未使用的代码
+
+    # === 代码质量（强烈推荐） ===
+    - gosimple      # 代码简化建议
+    - ineffassign   # 检测无效赋值
+    - gocyclo       # 检查圈复杂度（函数过长警告）
+    - goconst       # 检查重复字符串（建议提取为常量）
+    - gocritic      # 代码风格和性能建议
+
+    # === 格式化（推荐） ===
+    - gofmt         # 检查代码格式化
+    - goimports     # 检查 imports 排序
+
+    # === 可维护性（可选） ===
+    - revive        # 代码风格检查器（替代 golint）
+    - misspell      # 检查拼写错误
+    - dupl          # 检查重复代码
 
 linters-settings:
-  govet:
-    # Enable all checks
-    checks:
-      - all
+  # errcheck - 严格检查所有错误
+  errcheck:
+    check-type-assertions: true
+    check-blank: false
 
+  # govet - 启用所有检查
+  govet:
+    enable-all: true
+
+  # gocyclo - 圈复杂度阈值
+  gocyclo:
+    min-complexity: 15  # 函数复杂度超过 15 会警告
+
+  # goconst - 重复字符串检测
+  goconst:
+    min-len: 3          # 最小字符串长度
+    min-occurrences: 3  # 最小出现次数
+
+  # dupl - 重复代码检测
+  dupl:
+    threshold: 100  # 最小 token 数
+
+  # gocritic - 启用有用的检查器
+  gocritic:
+    enabled-checks:
+      - appendCombine    # 建议合并连续 append
+      - equalFold        # 建议使用 strings.EqualFold
+      - hugeParam        # 大参数建议使用指针
+      - rangeValCopy     # range 中大值复制警告
+      - unnamedResult    # 建议命名返回值
+      - unnecessaryBlock # 移除不必要的代码块
+
+  # revive - 代码风格规则
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+
+  # misspell - 拼写检查
+  misspell:
+    locale: US
+
+# Issues 排除规则
 issues:
   exclude-rules:
-    # Exclude some linters from running on test files
+    # 测试文件允许一些宽松检查
     - path: _test\.go
       linters:
-        - errcheck
+        - errcheck  # 测试中某些错误可以忽略
+        - dupl      # 测试代码重复是正常的
+        - gocyclo   # 测试代码可以复杂一些
 
+  # 排除的目录
+  exclude-dirs:
+    - vendor
+    - testdata
+
+  # 不使用默认排除规则
+  exclude-use-default: false
+
+  # 显示所有问题（不限制数量）
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  # 排除生成的代码
+  exclude-generated: strict
+
+# 运行配置
 run:
   timeout: 5m
+  modules-download-mode: readonly
+  concurrency: 4
+
+# 严重程度配置
+severity:
+  default-severity: error
+  rules:
+    - linters:
+        - dupl
+        - misspell
+      severity: warning
+    - linters:
+        - gocyclo
+        - goconst
+      severity: info
