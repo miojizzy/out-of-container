@@ -78,14 +78,11 @@ func main() {
 		log.Fatalf("Failed to initialize whitelist checker: %v", err)
 	}
 
-	aud, err := auditor.NewAuditor(
+	aud := auditor.NewAuditor(
 		cfg.Audit.LogFile,
 		cfg.Audit.RotationMaxMB,
 		cfg.Audit.RotationCount,
 	)
-	if err != nil {
-		log.Fatalf("Failed to initialize auditor: %v", err)
-	}
 	defer func() {
 		if err := aud.Close(); err != nil {
 			log.Printf("Failed to close auditor: %v\n", err)
