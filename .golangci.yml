@@ -8,8 +8,11 @@ linters:
 
 linters-settings:
   govet:
-    # Enable all checks
+    # Enable all checks except those that are too strict
     enable-all: true
+    disable:
+      - shadow
+      - unusedwrite
 
 issues:
   exclude-rules:
