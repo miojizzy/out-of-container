@@ -1,3 +1,6 @@
+// Package executor 提供命令执行功能。
+//
+// 实现了安全的命令执行器，支持超时控制、输出限制和资源管理。
 package executor
 
 import (

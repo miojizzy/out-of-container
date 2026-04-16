@@ -1,3 +1,6 @@
+// Package auditor 提供审计日志功能。
+//
+// 实现了基于文件的审计日志系统，支持旋转、缓冲写入和异步处理。
 package auditor
 
 import (

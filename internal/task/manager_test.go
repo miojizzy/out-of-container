@@ -50,14 +50,14 @@ audit:
 `)...)
 
 	if err := os.WriteFile(configPath, configData, 0600); err != nil {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir)
 		return nil, "", err
 	}
 
 	// 创建白检查器
 	checker, err := whitelist.NewChecker(configPath)
 	if err != nil {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir)
 		return nil, "", err
 	}
 
@@ -66,7 +66,7 @@ audit:
 
 // cleanupTestWhitelist 清理测试资源
 func cleanupTestWhitelist(tmpDir string) {
-	os.RemoveAll(tmpDir)
+	_ = os.RemoveAll(tmpDir)
 }
 
 func TestTaskManager_SubmitTask(t *testing.T) {

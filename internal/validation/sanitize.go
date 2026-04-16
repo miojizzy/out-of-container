@@ -1,3 +1,6 @@
+// Package validation 提供命令安全验证功能。
+//
+// 实现了对命令和参数的沙箱验证，防止shell注入等安全威胁。
 package validation
 
 import (

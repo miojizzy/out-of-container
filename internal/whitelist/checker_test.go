@@ -11,13 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewChecker(t *testing.T) {
-	// 创建临时配置文件
-	tempDir := t.TempDir()
-	configPath := filepath.Join(tempDir, "config.yaml")
-
-	// 创建有效的配置内容
-	configContent := `server:
+// testConfigYAML 是测试中使用的标准配置YAML字符串
+const testConfigYAML = `server:
   listen: ":8080"
   timeout_seconds: 30
   max_output_mb: 10
@@ -41,6 +36,14 @@ audit:
   rotation_max_mb: 100
   rotation_count: 5
 `
+
+func TestNewChecker(t *testing.T) {
+	// 创建临时配置文件
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "config.yaml")
+
+	// 创建有效的配置内容
+	configContent := testConfigYAML
 
 	// 写入配置文件
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
@@ -62,30 +65,7 @@ func TestIsAllowed_CommandWhitelist(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
 
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
+	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
 	require.NoError(t, err)
@@ -159,30 +139,7 @@ func TestIsAllowed_PathWhitelist(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
 
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
+	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
 	require.NoError(t, err)
@@ -301,7 +258,8 @@ audit:
 	require.NoError(t, err)
 
 	// 手动触发重载：先loadConfig，然后compileRules
-	checker.loadConfig()
+	loadErr := checker.loadConfig()
+	assert.NoError(t, loadErr)
 	compileErr := checker.compileRules()
 	assert.NoError(t, compileErr)
 
@@ -311,7 +269,7 @@ audit:
 	assert.NoError(t, err)
 }
 
-func TestReloadConfigFileError(t *testing.T) {
+func TestReloadConfigFileError(_ *testing.T) {
 	// 创建Checker实例
 	checker := &Checker{}
 
@@ -328,30 +286,7 @@ func TestGetConfig(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
 
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
+	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
 	require.NoError(t, err)
@@ -372,30 +307,7 @@ func TestIsPathAllowed(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
 
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
+	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
 	require.NoError(t, err)
@@ -589,30 +501,7 @@ func TestConcurrentAccess(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
 
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
+	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
 	require.NoError(t, err)
@@ -642,30 +531,7 @@ func TestRegexRuleComplex(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
 
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
+	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
 	require.NoError(t, err)

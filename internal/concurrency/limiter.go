@@ -1,3 +1,6 @@
+// Package concurrency 提供并发控制功能。
+//
+// 实现了基于信号量的并发限制器，用于控制同时执行的请求数量。
 package concurrency
 
 import (

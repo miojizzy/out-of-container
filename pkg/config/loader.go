@@ -1,3 +1,6 @@
+// Package config 提供配置文件加载和管理功能。
+//
+// 支持YAML格式的配置文件，包含服务器、白名单、审计等配置项。
 package config
 
 import (

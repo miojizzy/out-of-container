@@ -1,3 +1,7 @@
+// Package main 提供 exec-server HTTP 服务器。
+//
+// ooc-server 是容器外命令执行系统的服务器端，负责接收执行请求、
+// 验证白名单、审计日志、并发控制和任务管理。
 package main
 
 import (

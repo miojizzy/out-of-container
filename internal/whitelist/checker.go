@@ -1,3 +1,6 @@
+// Package whitelist 提供命令白名单验证功能。
+//
+// 实现了基于字面量和正则表达式的命令和路径白名单检查机制。
 package whitelist
 
 import (

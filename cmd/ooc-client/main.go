@@ -1,3 +1,7 @@
+// Package main 提供容器外命令执行客户端工具。
+//
+// ooc-client 是一个命令行工具，用于向 exec-server 发送命令执行请求。
+// 支持命令发现模式和命令执行模式。
 package main
 
 import (

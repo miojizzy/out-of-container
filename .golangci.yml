@@ -1,5 +1,11 @@
 # golangci-lint 配置 - 本项目推荐配置
 # 文档: https://golangci-lint.run/usage/configuration/
+version: 2
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
 
 linters:
   enable:
@@ -7,13 +13,10 @@ linters:
     - govet         # Go vet 检查
     - staticcheck   # 静态分析检查
     - unused        # 检查未使用的代码
-    - gosimple      # 代码简化建议
     - ineffassign   # 检测无效赋值
     - gocyclo       # 检查圈复杂度
     - goconst       # 检查重复字符串
     - gocritic      # 代码风格和性能建议
-    - gofmt         # 检查代码格式化
-    - goimports     # 检查 imports 排序
     - revive        # 代码风格检查器
     - misspell      # 检查拼写错误
     - dupl          # 检查重复代码
@@ -105,15 +108,3 @@ run:
   timeout: 5m
   modules-download-mode: readonly
   concurrency: 4
-
-severity:
-  default-severity: error
-  rules:
-    - linters:
-        - dupl
-        - misspell
-      severity: warning
-    - linters:
-        - gocyclo
-        - goconst
-      severity: info

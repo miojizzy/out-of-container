@@ -1,3 +1,6 @@
+// Package task 提供任务管理功能。
+//
+// 实现了任务的提交、状态管理、执行和清理机制。
 package task
 
 import (
