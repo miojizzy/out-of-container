@@ -17,7 +17,7 @@ type PersistenceConfig struct {
 	SaveInterval  string `yaml:"save_interval"`
 }
 
-// 默认配置
+// DefaultPersistenceConfig 是默认的持久化配置
 var DefaultPersistenceConfig = PersistenceConfig{
 	Enabled:       false,
 	FilePath:      "/var/lib/ooc-server/tasks.json",
@@ -27,7 +27,7 @@ var DefaultPersistenceConfig = PersistenceConfig{
 
 // PersistenceManager 持久化管理器
 type PersistenceManager struct {
-	store      TaskStore
+	store      Store
 	config     PersistenceConfig
 	filePath   string
 	mutex      sync.RWMutex
@@ -36,7 +36,7 @@ type PersistenceManager struct {
 }
 
 // NewPersistenceManager 创建持久化管理器
-func NewPersistenceManager(store TaskStore, config PersistenceConfig) *PersistenceManager {
+func NewPersistenceManager(store Store, config PersistenceConfig) *PersistenceManager {
 	if config.FilePath == "" {
 		config.FilePath = DefaultPersistenceConfig.FilePath
 	}

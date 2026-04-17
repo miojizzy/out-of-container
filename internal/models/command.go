@@ -1,3 +1,6 @@
+// Package models 定义数据模型。
+//
+// 包含命令、结果、错误响应等数据结构。
 package models
 
 // Command represents an execution request

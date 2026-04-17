@@ -42,20 +42,26 @@ var (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+// run 是主逻辑入口，返回退出码。将逻辑提取到独立函数以确保 defer 正常执行。
+func run() int {
 	flag.Parse()
 
 	// 显示版本信息
 	if *version {
 		fmt.Printf("ooc-server version %s\n", Version)
 		fmt.Printf("Build time: %s\n", BuildTime)
-		os.Exit(0)
+		return 0
 	}
 
 	// Expand config path
 	if *configPath == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			log.Fatalf("Failed to get user home directory: %v", err)
+			fmt.Fprintf(os.Stderr, "Failed to get user home directory: %v\n", err)
+			return 1
 		}
 		*configPath = home + "/.config/ooc-server/config.yaml"
 	}
@@ -65,21 +71,24 @@ func main() {
 	// Handle init mode
 	if *initMode {
 		if err := loader.InitConfig(); err != nil {
-			log.Fatalf("Failed to initialize config: %v", err)
+			fmt.Fprintf(os.Stderr, "Failed to initialize config: %v\n", err)
+			return 1
 		}
-		return
+		return 0
 	}
 
 	// Load config
 	cfg, err := loader.Load()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
+		return 1
 	}
 
 	// Initialize components
 	whitelistChecker, err := whitelist.NewChecker(*configPath)
 	if err != nil {
-		log.Fatalf("Failed to initialize whitelist checker: %v", err)
+		fmt.Fprintf(os.Stderr, "Failed to initialize whitelist checker: %v\n", err)
+		return 1
 	}
 
 	aud := auditor.NewAuditor(
@@ -97,7 +106,7 @@ func main() {
 
 	// Initialize task manager
 	taskStore := task.NewMemoryStore()
-	taskManager := task.NewTaskManager(
+	taskManager := task.NewManager(
 		taskStore,
 		exec,
 		whitelistChecker,
@@ -151,6 +160,9 @@ func main() {
 	// Start server
 	log.Printf("Server starting on %s", cfg.Server.Listen)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("Server failed: %v", err)
+		fmt.Fprintf(os.Stderr, "Server failed: %v\n", err)
+		return 1
 	}
+
+	return 0
 }

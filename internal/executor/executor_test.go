@@ -22,11 +22,11 @@ type mockValidator struct {
 	checkArgsErr    error
 }
 
-func (m *mockValidator) CheckCommandSafety(command string) error {
+func (m *mockValidator) CheckCommandSafety(_ string) error {
 	return m.checkCommandErr
 }
 
-func (m *mockValidator) CheckArgsSafety(args []string) error {
+func (m *mockValidator) CheckArgsSafety(_ []string) error {
 	return m.checkArgsErr
 }
 
@@ -1095,7 +1095,7 @@ func TestExecuteResult_Structure(t *testing.T) {
 }
 
 // 测试接口实现
-func TestLimitations(t *testing.T) {
+func TestLimitations(_ *testing.T) {
 	var _ io.Writer = (*LimitedBuffer)(nil)
 }
 

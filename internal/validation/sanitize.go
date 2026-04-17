@@ -8,9 +8,8 @@ import (
 	"strings"
 )
 
-var (
-	ErrShellMetacharFound = errors.New("shell metacharacters not allowed")
-)
+// ErrShellMetacharFound 是 shell 元字符错误
+var ErrShellMetacharFound = errors.New("shell metacharacters not allowed")
 
 // CheckShellMetacharacters checks if string contains forbidden shell metacharacters
 // Forbidden chars: | & ; $ ` < > ( ) and combinations: || && $()

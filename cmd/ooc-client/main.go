@@ -79,13 +79,18 @@ var (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+// run 是主逻辑入口，返回退出码。将逻辑提取到独立函数以确保 defer 正常执行。
+func run() int {
 	flag.Parse()
 
 	// 显示版本信息
 	if *version {
 		fmt.Printf("ooc-client version %s\n", Version)
 		fmt.Printf("Build time: %s\n", BuildTime)
-		os.Exit(0)
+		return 0
 	}
 
 	// Load config
@@ -95,7 +100,7 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to get user home directory: %v\n", err)
 			printHelp()
-			os.Exit(1)
+			return 1
 		}
 		configFile = filepath.Join(home, ".config/ooc-client/config.yaml")
 	}
@@ -119,25 +124,25 @@ func main() {
 	if cfg.ServerURL == "" {
 		fmt.Fprintln(os.Stderr, "Server URL required (set in config or use -server flag)")
 		printHelp()
-		os.Exit(1)
+		return 1
 	}
 	if cfg.APIToken == "" {
 		fmt.Fprintln(os.Stderr, "API token required (set in config or use -token flag)")
 		printHelp()
-		os.Exit(1)
+		return 1
 	}
 
 	// 发现模式处理
 	if *listCommands || *listPaths || *discoveryOnly {
 		handleDiscovery(cfg)
-		return
+		return 0
 	}
 
 	// 命令执行模式验证
 	if *command == "" {
 		fmt.Fprintln(os.Stderr, "Command required (use -command flag) or use discovery flags (-list-commands, -list-paths)")
 		printHelp()
-		os.Exit(1)
+		return 1
 	}
 	if *cwd == "" {
 		cwd = new(string)
@@ -165,12 +170,12 @@ func main() {
 	body, err := json.Marshal(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to marshal request: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 	httpReq, err := http.NewRequest("POST", cfg.ServerURL+"/ooc-exec", bytes.NewReader(body))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create request: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 	httpReq.Header.Set("Authorization", "Bearer "+cfg.APIToken)
 	httpReq.Header.Set("Content-Type", "application/json")
@@ -179,7 +184,7 @@ func main() {
 	resp, err := client.Do(httpReq)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Request failed: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
@@ -190,23 +195,23 @@ func main() {
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to read response body: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp ErrorResponse
 		if err := json.Unmarshal(respBody, &errResp); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to parse error response: %v\n", err)
-			os.Exit(1)
+			return 1
 		}
 		fmt.Fprintf(os.Stderr, "Error: %s - %s\n", errResp.Error, errResp.Message)
-		os.Exit(1)
+		return 1
 	}
 
 	var execResp ExecResponse
 	if err := json.Unmarshal(respBody, &execResp); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to parse response: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	fmt.Print(execResp.Stdout)
@@ -217,7 +222,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "\n[Output truncated at 10MB]")
 	}
 
-	os.Exit(execResp.ExitCode)
+	return execResp.ExitCode
 }
 
 // handleDiscovery 处理白名单信息发现请求

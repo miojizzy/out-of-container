@@ -45,10 +45,12 @@ func NewRegexRule(regex string) (*RegexRule, error) {
 	return &RegexRule{pattern: re, regex: regex}, nil
 }
 
+// Match checks if the command matches this regex rule
 func (r *RegexRule) Match(command string) (bool, error) {
 	return r.pattern.MatchString(command), nil
 }
 
+// Type returns the rule type as "regex"
 func (r *RegexRule) Type() string {
 	return "regex"
 }

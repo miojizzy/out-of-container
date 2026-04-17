@@ -69,7 +69,7 @@ func cleanupTestWhitelist(tmpDir string) {
 	_ = os.RemoveAll(tmpDir)
 }
 
-func TestTaskManager_SubmitTask(t *testing.T) {
+func TestManager_SubmitTask(t *testing.T) {
 	store := NewMemoryStore()
 	exec := executor.NewExecutor(30, 10)
 
@@ -80,7 +80,7 @@ func TestTaskManager_SubmitTask(t *testing.T) {
 	}
 	defer cleanupTestWhitelist(tmpDir)
 
-	tm := NewTaskManager(store, exec, whitelistChecker, nil, 24*time.Hour)
+	tm := NewManager(store, exec, whitelistChecker, nil, 24*time.Hour)
 
 	cmd := &models.Command{
 		Command: "echo",
@@ -104,7 +104,7 @@ func TestTaskManager_SubmitTask(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	if task.Status != TaskStatusPending {
+	if task.Status != StatusPending {
 		t.Errorf("Expected status 'pending', got %s", task.Status)
 	}
 
@@ -126,7 +126,7 @@ func TestTaskManager_SubmitTask(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	if loaded.Status != TaskStatusCompleted {
+	if loaded.Status != StatusCompleted {
 		t.Errorf("Expected status 'completed', got %s", loaded.Status)
 	}
 
@@ -135,7 +135,7 @@ func TestTaskManager_SubmitTask(t *testing.T) {
 	}
 }
 
-func TestTaskManager_SubmitTask_WhitelistDenied(t *testing.T) {
+func TestManager_SubmitTask_WhitelistDenied(t *testing.T) {
 	store := NewMemoryStore()
 	exec := executor.NewExecutor(30, 10)
 
@@ -146,7 +146,7 @@ func TestTaskManager_SubmitTask_WhitelistDenied(t *testing.T) {
 	}
 	defer cleanupTestWhitelist(tmpDir)
 
-	tm := NewTaskManager(store, exec, whitelistChecker, nil, 24*time.Hour)
+	tm := NewManager(store, exec, whitelistChecker, nil, 24*time.Hour)
 
 	cmd := &models.Command{
 		Command: "echo", // 不在白名单中
@@ -164,7 +164,7 @@ func TestTaskManager_SubmitTask_WhitelistDenied(t *testing.T) {
 	}
 }
 
-func TestTaskManager_GetStatus(t *testing.T) {
+func TestManager_GetStatus(t *testing.T) {
 	store := NewMemoryStore()
 	exec := executor.NewExecutor(30, 10)
 
@@ -174,7 +174,7 @@ func TestTaskManager_GetStatus(t *testing.T) {
 	}
 	defer cleanupTestWhitelist(tmpDir)
 
-	tm := NewTaskManager(store, exec, whitelistChecker, nil, 24*time.Hour)
+	tm := NewManager(store, exec, whitelistChecker, nil, 24*time.Hour)
 
 	cmd := &models.Command{
 		Command: "echo",
@@ -199,7 +199,7 @@ func TestTaskManager_GetStatus(t *testing.T) {
 	}
 }
 
-func TestTaskManager_Close(t *testing.T) {
+func TestManager_Close(t *testing.T) {
 	store := NewMemoryStore()
 	exec := executor.NewExecutor(30, 10)
 
@@ -209,7 +209,7 @@ func TestTaskManager_Close(t *testing.T) {
 	}
 	defer cleanupTestWhitelist(tmpDir)
 
-	tm := NewTaskManager(store, exec, whitelistChecker, nil, 24*time.Hour)
+	tm := NewManager(store, exec, whitelistChecker, nil, 24*time.Hour)
 
 	cmd := &models.Command{
 		Command: "sleep",
@@ -230,7 +230,7 @@ func TestTaskManager_Close(t *testing.T) {
 	// 这个测试只是验证 Close 不会 panic
 }
 
-func TestTaskManager_StartCleanupLoop(t *testing.T) {
+func TestManager_StartCleanupLoop(t *testing.T) {
 	store := NewMemoryStore()
 	exec := executor.NewExecutor(30, 10)
 
@@ -241,16 +241,16 @@ func TestTaskManager_StartCleanupLoop(t *testing.T) {
 	defer cleanupTestWhitelist(tmpDir)
 
 	// 设置 TTL 为 2 秒，清理间隔为 500 毫秒
-	tm := NewTaskManager(store, exec, whitelistChecker, nil, 2*time.Second)
+	tm := NewManager(store, exec, whitelistChecker, nil, 2*time.Second)
 
-	// 直接在存储中创建任务，不通过 TaskManager 执行
+	// 直接在存储中创建任务，不通过 Manager 执行
 	cmd := &models.Command{
 		Command: "echo",
 		Args:    []string{"hello"},
 		Cwd:     "/tmp",
 	}
 	task := NewTask(cmd)
-	task.Status = TaskStatusPending
+	task.Status = StatusPending
 
 	if err := store.Save(task); err != nil {
 		t.Fatalf("Failed to save task: %v", err)
@@ -272,7 +272,7 @@ func TestTaskManager_StartCleanupLoop(t *testing.T) {
 	}
 
 	// 更新任务为已完成
-	if err := store.Update(task.ID, TaskStatusCompleted, &models.Result{
+	if err := store.Update(task.ID, StatusCompleted, &models.Result{
 		ExitCode:   0,
 		Stdout:     "success\n",
 		Stderr:     "",
