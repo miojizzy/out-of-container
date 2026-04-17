@@ -14,7 +14,7 @@ func TestMemoryStore_Save(t *testing.T) {
 		Args:    []string{"hello"},
 		Cwd:     "/tmp",
 	}
-	task := NewTask(cmd)
+	task := NewTask(cmd, "")
 
 	// 保存任务
 	if err := store.Save(task); err != nil {
@@ -42,7 +42,7 @@ func TestMemoryStore_Get(t *testing.T) {
 		Args:    []string{"-la"},
 		Cwd:     "/home",
 	}
-	task := NewTask(cmd)
+	task := NewTask(cmd, "")
 
 	// 保存任务
 	if err := store.Save(task); err != nil {
@@ -72,7 +72,7 @@ func TestMemoryStore_Update(t *testing.T) {
 		Args:    []string{"5"},
 		Cwd:     "/tmp",
 	}
-	task := NewTask(cmd)
+	task := NewTask(cmd, "")
 
 	// 保存任务
 	if err := store.Save(task); err != nil {
@@ -134,7 +134,7 @@ func TestMemoryStore_Delete(t *testing.T) {
 		Args:    []string{},
 		Cwd:     "/",
 	}
-	task := NewTask(cmd)
+	task := NewTask(cmd, "")
 
 	// 保存任务
 	if err := store.Save(task); err != nil {
@@ -172,8 +172,8 @@ func TestMemoryStore_GetAll(t *testing.T) {
 		Args:    []string{"-la"},
 		Cwd:     "/home",
 	}
-	task1 := NewTask(cmd1)
-	task2 := NewTask(cmd2)
+	task1 := NewTask(cmd1, "")
+	task2 := NewTask(cmd2, "")
 
 	// 保存两个任务
 	if err := store.Save(task1); err != nil {
@@ -219,8 +219,8 @@ func TestMemoryStore_CleanupExpired(t *testing.T) {
 		Args:    []string{"-la"},
 		Cwd:     "/home",
 	}
-	task1 := NewTask(cmd1)
-	task2 := NewTask(cmd2)
+	task1 := NewTask(cmd1, "")
+	task2 := NewTask(cmd2, "")
 
 	// 保存任务
 	if err := store.Save(task1); err != nil {
@@ -260,7 +260,7 @@ func TestMemoryStore_CleanupExpired(t *testing.T) {
 		Command: "sleep",
 		Args:    []string{"1000"},
 		Cwd:     "/tmp",
-	})
+	}, "")
 	// 设置创建时间为1小时之前
 	task3.CreatedAt = time.Now().Add(-1 * time.Hour)
 	if err := store.Save(task3); err != nil {
