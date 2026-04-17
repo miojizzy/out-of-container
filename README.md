@@ -495,10 +495,10 @@ vim ~/.config/ooc-server/config.yaml
 
 ### 异步执行流程
 
-1. **提交任务** - POST `/api/v1/tasks`
+1. **提交任务** - POST `/task`
    ```bash
    # 提交异步任务
-   curl -X POST http://localhost:8080/api/v1/tasks \
+   curl -X POST http://localhost:8080/task \
      -H "Authorization: Bearer YOUR_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{
@@ -511,33 +511,29 @@ vim ~/.config/ooc-server/config.yaml
    {
      "task_id": "task-123",
      "status": "pending",
-     "message": "Task submitted successfully"
+     "message": "task submitted successfully"
    }
    ```
 
-2. **查询任务状态** - GET `/api/v1/tasks/{task_id}`
+2. **查询任务状态** - GET `/task/{task_id}`
    ```bash
    # 查询任务状态
-   curl http://localhost:8080/api/v1/tasks/task-123 \
+   curl http://localhost:8080/task/task-123 \
      -H "Authorization: Bearer YOUR_TOKEN"
    
    # 响应
    {
-     "id": "task-123",
-     "command": "make",
-     "args": ["build"],
-     "cwd": "/home/user/projects",
+     "task_id": "task-123",
      "status": "completed",
-     "result": {
-       "exit_code": 0,
-       "stdout": "Build successful\n",
-       "stderr": "",
-       "duration_ms": 5234,
-       "truncated": false
-     },
      "created_at": "2026-04-14T04:00:00Z",
      "started_at": "2026-04-14T04:00:01Z",
-     "completed_at": "2026-04-14T04:00:06Z"
+     "completed_at": "2026-04-14T04:00:06Z",
+     "duration_ms": 5234,
+     "exit_code": 0,
+     "stdout": "Build successful\n",
+     "stderr": "",
+     "output_size": 1024,
+     "truncated": false
    }
    ```
 

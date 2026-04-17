@@ -29,7 +29,7 @@ const (
 // 以避免导入循环
 // 其他包应该依赖此接口，而不是直接依赖 Manager
 type TaskManagerInterface interface {
-	SubmitTask(cmd *models.Command) (*Task, error)
+	SubmitTask(cmd *models.Command, tokenPrefix string) (*Task, error)
 	GetStatus(taskID string) (*Task, error)
 	Close()
 }
@@ -46,6 +46,7 @@ type Task struct {
 	CompletedAt *time.Time     `json:"completed_at,omitempty"`
 	Result      *models.Result `json:"result,omitempty"`
 	Error       *string        `json:"error,omitempty"`
+	TokenPrefix string         `json:"token_prefix,omitempty"`
 }
 
 // SubmitResponse 任务提交响应
@@ -73,14 +74,15 @@ type StatusResponse struct {
 }
 
 // NewTask 创建新任务
-func NewTask(cmd *models.Command) *Task {
+func NewTask(cmd *models.Command, tokenPrefix string) *Task {
 	return &Task{
-		ID:        generateTaskID(),
-		Command:   cmd.Command,
-		Args:      cmd.Args,
-		Cwd:       cmd.Cwd,
-		Status:    StatusPending,
-		CreatedAt: time.Now(),
+		ID:          generateTaskID(),
+		Command:     cmd.Command,
+		Args:        cmd.Args,
+		Cwd:         cmd.Cwd,
+		Status:      StatusPending,
+		CreatedAt:   time.Now(),
+		TokenPrefix: tokenPrefix,
 	}
 }
 

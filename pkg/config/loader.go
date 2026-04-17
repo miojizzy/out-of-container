@@ -140,9 +140,9 @@ func (l *Loader) InitConfig() error {
 
 	fmt.Printf("Config file created: %s\n", l.configPath)
 	fmt.Printf("API Token: %s\n", token)
-	fmt.Println("\nPlease edit the config file to customize:")
-	fmt.Println("  - literal_commands: Add your allowed commands")
-	fmt.Println("  - allowed_paths: Set your project directories")
+	log.Println("\nPlease edit the config file to customize:")
+	log.Println("  - literal_commands: Add your allowed commands")
+	log.Println("  - allowed_paths: Set your project directories")
 
 	return nil
 }

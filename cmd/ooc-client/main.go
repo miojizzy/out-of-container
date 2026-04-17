@@ -10,6 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -88,8 +89,8 @@ func run() int {
 
 	// 显示版本信息
 	if *version {
-		fmt.Printf("ooc-client version %s\n", Version)
-		fmt.Printf("Build time: %s\n", BuildTime)
+		log.Printf("ooc-client version %s", Version)
+		log.Printf("Build time: %s", BuildTime)
 		return 0
 	}
 
@@ -98,7 +99,7 @@ func run() int {
 	if configFile == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to get user home directory: %v\n", err)
+			log.Printf("Failed to get user home directory: %v", err)
 			printHelp()
 			return 1
 		}
@@ -108,7 +109,7 @@ func run() int {
 	var cfg ClientConfig
 	if data, err := os.ReadFile(configFile); err == nil {
 		if err := yaml.Unmarshal(data, &cfg); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse config file: %v\n", err)
+			log.Printf("Failed to parse config file: %v", err)
 		}
 	}
 
@@ -122,12 +123,12 @@ func run() int {
 
 	// Validate
 	if cfg.ServerURL == "" {
-		fmt.Fprintln(os.Stderr, "Server URL required (set in config or use -server flag)")
+		log.Println("Server URL required (set in config or use -server flag)")
 		printHelp()
 		return 1
 	}
 	if cfg.APIToken == "" {
-		fmt.Fprintln(os.Stderr, "API token required (set in config or use -token flag)")
+		log.Println("API token required (set in config or use -token flag)")
 		printHelp()
 		return 1
 	}
@@ -140,7 +141,7 @@ func run() int {
 
 	// 命令执行模式验证
 	if *command == "" {
-		fmt.Fprintln(os.Stderr, "Command required (use -command flag) or use discovery flags (-list-commands, -list-paths)")
+		log.Println("Command required (use -command flag) or use discovery flags (-list-commands, -list-paths)")
 		printHelp()
 		return 1
 	}
@@ -169,12 +170,12 @@ func run() int {
 
 	body, err := json.Marshal(req)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to marshal request: %v\n", err)
+		log.Printf("Failed to marshal request: %v", err)
 		return 1
 	}
 	httpReq, err := http.NewRequest("POST", cfg.ServerURL+"/ooc-exec", bytes.NewReader(body))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to create request: %v\n", err)
+		log.Printf("Failed to create request: %v", err)
 		return 1
 	}
 	httpReq.Header.Set("Authorization", "Bearer "+cfg.APIToken)
@@ -183,34 +184,34 @@ func run() int {
 	client := &http.Client{}
 	resp, err := client.Do(httpReq)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Request failed: %v\n", err)
+		log.Printf("Request failed: %v", err)
 		return 1
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to close response body: %v\n", err)
+			log.Printf("Failed to close response body: %v", err)
 		}
 	}()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to read response body: %v\n", err)
+		log.Printf("Failed to read response body: %v", err)
 		return 1
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp ErrorResponse
 		if err := json.Unmarshal(respBody, &errResp); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse error response: %v\n", err)
+			log.Printf("Failed to parse error response: %v", err)
 			return 1
 		}
-		fmt.Fprintf(os.Stderr, "Error: %s - %s\n", errResp.Error, errResp.Message)
+		log.Printf("Error: %s - %s", errResp.Error, errResp.Message)
 		return 1
 	}
 
 	var execResp ExecResponse
 	if err := json.Unmarshal(respBody, &execResp); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to parse response: %v\n", err)
+		log.Printf("Failed to parse response: %v", err)
 		return 1
 	}
 
@@ -230,7 +231,7 @@ func handleDiscovery(cfg ClientConfig) {
 	// 查询服务器白名单信息
 	info, err := fetchWhitelistInfo(cfg)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Discovery failed: %v\n", err)
+		log.Printf("Discovery failed: %v", err)
 		os.Exit(1)
 	}
 
@@ -267,7 +268,7 @@ func fetchWhitelistInfo(cfg ClientConfig) (*WhitelistInfoResponse, error) {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to close response body: %v\n", err)
+			log.Printf("Failed to close response body: %v", err)
 		}
 	}()
 

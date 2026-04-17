@@ -51,8 +51,8 @@ func run() int {
 
 	// 显示版本信息
 	if *version {
-		fmt.Printf("ooc-server version %s\n", Version)
-		fmt.Printf("Build time: %s\n", BuildTime)
+		log.Printf("ooc-server version %s", Version)
+		log.Printf("Build time: %s", BuildTime)
 		return 0
 	}
 

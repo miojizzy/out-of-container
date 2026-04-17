@@ -5,7 +5,7 @@ package task
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -48,7 +48,7 @@ func NewManager(
 }
 
 // SubmitTask 提交新任务
-func (tm *Manager) SubmitTask(cmd *models.Command) (*Task, error) {
+func (tm *Manager) SubmitTask(cmd *models.Command, tokenPrefix string) (*Task, error) {
 	// 检查白名单
 	_, _, err := tm.whitelist.IsAllowed(cmd.Command, cmd.Cwd)
 	if err != nil {
@@ -61,8 +61,8 @@ func (tm *Manager) SubmitTask(cmd *models.Command) (*Task, error) {
 		return nil, fmt.Errorf("whitelist check failed: %w", err)
 	}
 
-	// 创建任务
-	task := NewTask(cmd)
+	// 创建任务（包含 token prefix 用于审计）
+	task := NewTask(cmd, tokenPrefix)
 	task.Status = StatusPending
 
 	// 保存任务到存储
@@ -84,7 +84,7 @@ func (tm *Manager) executeTask(taskID string) {
 	// 获取任务
 	task, err := tm.getTask(taskID)
 	if err != nil {
-		fmt.Printf("Failed to get task %s: %v\n", taskID, err)
+		log.Printf("Failed to get task %s: %v\n", taskID, err)
 		return
 	}
 
@@ -93,7 +93,7 @@ func (tm *Manager) executeTask(taskID string) {
 	task.Status = StatusRunning
 	task.StartedAt = &now
 	if err := tm.store.Update(taskID, StatusRunning, nil, nil); err != nil {
-		fmt.Printf("Failed to update task %s status: %v\n", taskID, err)
+		log.Printf("Failed to update task %s status: %v\n", taskID, err)
 		return
 	}
 
@@ -132,19 +132,18 @@ func (tm *Manager) executeTask(taskID string) {
 
 	// 更新任务状态
 	if err := tm.store.Update(taskID, taskStatus, resultData, errMsg); err != nil {
-		fmt.Printf("Failed to update task %s after execution: %v\n", taskID, err)
+		log.Printf("Failed to update task %s after execution: %v\n", taskID, err)
 		return
 	}
 
 	// 审计日志
 	if tm.auditor != nil && result.Result != nil {
-		// 获取 token prefix (此处理解上可能需要从请求上下文获取，这里简化)
 		tm.auditor.Log(&models.AuditEntry{
 			Timestamp:       time.Now().Format(time.RFC3339),
 			Command:         task.Command,
 			Args:            task.Args,
 			Cwd:             task.Cwd,
-			TokenPrefix:     "", // TODO: 从上下文获取
+			TokenPrefix:     task.TokenPrefix,
 			ExitCode:        result.Result.ExitCode,
 			DurationMs:      result.Result.DurationMs,
 			OutputSizeBytes: result.Result.OutputSize,
@@ -185,7 +184,7 @@ func (tm *Manager) StartCleanupLoop(interval time.Duration) {
 
 		for range ticker.C {
 			if err := tm.store.CleanupExpired(tm.taskTTL); err != nil {
-				fmt.Printf("Failed to cleanup expired tasks: %v\n", err)
+				log.Printf("Failed to cleanup expired tasks: %v\n", err)
 			}
 		}
 	}()
