@@ -89,7 +89,7 @@ func TestManager_SubmitTask(t *testing.T) {
 	}
 
 	// 测试成功提交
-	submittedTask, err := tm.SubmitTask(cmd)
+	submittedTask, err := tm.SubmitTask(cmd, "")
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -154,7 +154,7 @@ func TestManager_SubmitTask_WhitelistDenied(t *testing.T) {
 		Cwd:     "/tmp",
 	}
 
-	task, err := tm.SubmitTask(cmd)
+	task, err := tm.SubmitTask(cmd, "")
 	if task != nil {
 		t.Error("Expected nil task for denied command")
 	}
@@ -183,7 +183,7 @@ func TestManager_GetStatus(t *testing.T) {
 	}
 
 	// 提交任务
-	task, err := tm.SubmitTask(cmd)
+	task, err := tm.SubmitTask(cmd, "")
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -218,7 +218,7 @@ func TestManager_Close(t *testing.T) {
 	}
 
 	// 提交任务
-	_, err = tm.SubmitTask(cmd)
+	_, err = tm.SubmitTask(cmd, "")
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -249,7 +249,7 @@ func TestManager_StartCleanupLoop(t *testing.T) {
 		Args:    []string{"hello"},
 		Cwd:     "/tmp",
 	}
-	task := NewTask(cmd)
+	task := NewTask(cmd, "")
 	task.Status = StatusPending
 
 	if err := store.Save(task); err != nil {

@@ -66,8 +66,8 @@ func TestPersistenceManager_SaveRestore(t *testing.T) {
 		Args:    []string{"-la"},
 		Cwd:     "/home",
 	}
-	task1 := NewTask(cmd1)
-	task2 := NewTask(cmd2)
+	task1 := NewTask(cmd1, "")
+	task2 := NewTask(cmd2, "")
 
 	if err := store.Save(task1); err != nil {
 		t.Fatalf("Failed to save task1: %v", err)
@@ -236,7 +236,7 @@ func TestPersistenceManager_ConcurrentAccess(t *testing.T) {
 					Args:    []string{},
 					Cwd:     "/tmp",
 				}
-				task := NewTask(cmd)
+				task := NewTask(cmd, "")
 				if err := store.Save(task); err != nil && err != ErrTaskNotFound {
 					t.Errorf("Failed to save task: %v", err)
 					return
