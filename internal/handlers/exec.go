@@ -1,3 +1,6 @@
+// Package handlers 提供 HTTP 处理程序。
+//
+// 包含 ooc-exec、whitelist-info 和健康检查端点的处理程序。
 package handlers
 
 import (
@@ -146,7 +149,7 @@ func (h *ExecHandler) handle(w http.ResponseWriter, r *http.Request) {
 }
 
 // HealthHandler handles /health requests
-func HealthHandler(w http.ResponseWriter, r *http.Request) {
+func HealthHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte("OK")); err != nil {

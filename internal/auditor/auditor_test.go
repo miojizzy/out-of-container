@@ -17,7 +17,11 @@ func TestAuditor_Log(t *testing.T) {
 
 	// Create auditor
 	auditor := NewAuditor(logFile, 10, 3)
-	defer auditor.Close()
+	defer func() {
+		if err := auditor.Close(); err != nil {
+			t.Logf("Warning: failed to close auditor: %v", err)
+		}
+	}()
 
 	// Create a test audit entry
 	entry := &models.AuditEntry{
@@ -79,7 +83,11 @@ func TestAuditor_RotateLog(t *testing.T) {
 
 	// Create auditor with small rotation size
 	auditor := NewAuditor(logFile, 1, 3) // 1MB for testing
-	defer auditor.Close()
+	defer func() {
+		if err := auditor.Close(); err != nil {
+			t.Logf("Warning: failed to close auditor: %v", err)
+		}
+	}()
 
 	// Create a test audit entry with large output to trigger rotation
 	entry := &models.AuditEntry{

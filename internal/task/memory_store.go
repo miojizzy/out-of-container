@@ -56,7 +56,7 @@ func (s *MemoryStore) Get(taskID string) (*Task, error) {
 }
 
 // Update 更新任务状态和结果
-func (s *MemoryStore) Update(taskID string, status TaskStatus, result *models.Result, err *string) error {
+func (s *MemoryStore) Update(taskID string, status Status, result *models.Result, err *string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -66,10 +66,11 @@ func (s *MemoryStore) Update(taskID string, status TaskStatus, result *models.Re
 	}
 
 	task.Status = status
-	if status == TaskStatusRunning {
+	switch status {
+	case StatusRunning:
 		now := time.Now()
 		task.StartedAt = &now
-	} else if status == TaskStatusCompleted || status == TaskStatusFailed || status == TaskStatusTimeout {
+	case StatusCompleted, StatusFailed, StatusTimeout:
 		now := time.Now()
 		task.CompletedAt = &now
 		if result != nil {
@@ -135,17 +136,17 @@ func (s *MemoryStore) CleanupExpired(ttl time.Duration) error {
 }
 
 // ErrTaskNotFound 任务未找到错误
-var ErrTaskNotFound = &TaskNotFoundError{}
+var ErrTaskNotFound = &NotFoundError{}
 
-// TaskNotFoundError 任务未找到错误类型
-type TaskNotFoundError struct{}
+// NotFoundError 任务未找到错误类型
+type NotFoundError struct{}
 
-func (e *TaskNotFoundError) Error() string {
+func (e *NotFoundError) Error() string {
 	return "task not found"
 }
 
-// IsTaskNotFoundError 检查是否为任务未找到错误
-func IsTaskNotFoundError(err error) bool {
-	_, ok := err.(*TaskNotFoundError)
+// IsNotFoundError 检查是否为任务未找到错误
+func IsNotFoundError(err error) bool {
+	_, ok := err.(*NotFoundError)
 	return ok || err == ErrTaskNotFound
 }

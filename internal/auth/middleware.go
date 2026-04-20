@@ -1,3 +1,6 @@
+// Package auth 提供HTTP认证中间件。
+//
+// 实现了基于Bearer Token的认证机制，用于验证API请求。
 package auth
 
 import (

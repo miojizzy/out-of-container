@@ -22,11 +22,11 @@ type mockValidator struct {
 	checkArgsErr    error
 }
 
-func (m *mockValidator) CheckCommandSafety(command string) error {
+func (m *mockValidator) CheckCommandSafety(_ string) error {
 	return m.checkCommandErr
 }
 
-func (m *mockValidator) CheckArgsSafety(args []string) error {
+func (m *mockValidator) CheckArgsSafety(_ []string) error {
 	return m.checkArgsErr
 }
 
@@ -368,7 +368,7 @@ func TestLimitedBuffer_DiscardAfterTruncation(t *testing.T) {
 	buf := &LimitedBuffer{maxBytes: 5}
 
 	// 先超出限制
-	buf.Write([]byte(strings.Repeat("x", 10)))
+	_, _ = buf.Write([]byte(strings.Repeat("x", 10)))
 	if !buf.IsTruncated() {
 		t.Fatal("buffer should be truncated after first write")
 	}
@@ -396,7 +396,7 @@ func TestLimitedBuffer_WithSharedCounter(t *testing.T) {
 
 	// 写入50字节
 	data50 := strings.Repeat("a", 50)
-	buf.Write([]byte(data50))
+	_, _ = buf.Write([]byte(data50))
 	if buf.BytesWritten() != 50 {
 		t.Errorf("expected 50 bytes, got %d", buf.BytesWritten())
 	}
@@ -407,7 +407,7 @@ func TestLimitedBuffer_WithSharedCounter(t *testing.T) {
 		sharedCounter: counter,
 	}
 	data30 := strings.Repeat("b", 30)
-	buf2.Write([]byte(data30))
+	_, _ = buf2.Write([]byte(data30))
 	if buf2.BytesWritten() != 30 {
 		t.Errorf("expected 30 bytes, got %d", buf2.BytesWritten())
 	}
@@ -638,11 +638,11 @@ func TestLimitedBuffer_EmptyWrites(t *testing.T) {
 func TestLimitedBuffer_MultipleWrites(t *testing.T) {
 	buf := &LimitedBuffer{maxBytes: 20}
 
-	buf.Write([]byte("12345")) // 5 bytes
-	buf.Write([]byte("67890")) // 5 bytes, total 10
-	buf.Write([]byte("abcde")) // 5 bytes, total 15
-	buf.Write([]byte("fghij")) // 5 bytes, total 20, exactly full
-	buf.Write([]byte("klmno")) // should truncate after this
+	_, _ = buf.Write([]byte("12345")) // 5 bytes
+	_, _ = buf.Write([]byte("67890")) // 5 bytes, total 10
+	_, _ = buf.Write([]byte("abcde")) // 5 bytes, total 15
+	_, _ = buf.Write([]byte("fghij")) // 5 bytes, total 20, exactly full
+	_, _ = buf.Write([]byte("klmno")) // should truncate after this
 
 	if buf.BytesWritten() != 20 {
 		t.Errorf("expected 20 bytes written, got %d", buf.BytesWritten())
@@ -668,7 +668,7 @@ func TestExecutor_Execute_EmptyCommand(t *testing.T) {
 	})
 
 	// 空命令应该被安全验证拒绝
-	validation.CheckCommandSafety("") // 返回错误
+	_ = validation.CheckCommandSafety("") // 返回错误
 	if result.HTTPError != http.StatusBadRequest {
 		t.Logf("empty command resulted in HTTP status: %d", result.HTTPError)
 	}
@@ -749,7 +749,7 @@ func TestLimitedBuffer_ConcurrentWrites(t *testing.T) {
 		go func(idx int) {
 			defer wg.Done()
 			data := fmt.Sprintf("goroutine-%d-data-", idx) + strings.Repeat("x", 100)
-			buf.Write([]byte(data))
+			_, _ = buf.Write([]byte(data))
 		}(i)
 	}
 
@@ -779,7 +779,7 @@ func TestLimitedBuffer_ExactLimit(t *testing.T) {
 
 	// 再写入任何内容都应该被丢弃
 	before := buf.BytesWritten()
-	buf.Write([]byte("extra"))
+	_, _ = buf.Write([]byte("extra"))
 	if buf.BytesWritten() != before {
 		t.Errorf("bytes written changed after limit reached")
 	}
@@ -788,9 +788,9 @@ func TestLimitedBuffer_ExactLimit(t *testing.T) {
 func TestLimitedBuffer_OneByteOver(t *testing.T) {
 	buf := &LimitedBuffer{maxBytes: 10}
 
-	buf.Write([]byte("12345")) // 5
-	buf.Write([]byte("67890")) // 5, total 10 (full)
-	buf.Write([]byte("a"))     // 1 over, should trigger truncation
+	_, _ = buf.Write([]byte("12345")) // 5
+	_, _ = buf.Write([]byte("67890")) // 5, total 10 (full)
+	_, _ = buf.Write([]byte("a"))     // 1 over, should trigger truncation
 
 	if buf.BytesWritten() != 10 {
 		t.Errorf("expected 10 bytes written, got %d", buf.BytesWritten())
@@ -928,7 +928,7 @@ func TestExecutor_Execute_NegativeTimeout(t *testing.T) {
 
 func TestLimitedBuffer_String(t *testing.T) {
 	buf := &LimitedBuffer{maxBytes: 100}
-	buf.Write([]byte("hello world"))
+	_, _ = buf.Write([]byte("hello world"))
 	if buf.String() != "hello world" {
 		t.Errorf("expected 'hello world', got %q", buf.String())
 	}
@@ -1003,12 +1003,12 @@ func TestLimitedBuffer_NoSharedCounter(t *testing.T) {
 	buf := &LimitedBuffer{maxBytes: 10}
 	// 不设置共享计数器
 
-	buf.Write([]byte(strings.Repeat("x", 5)))
+	_, _ = buf.Write([]byte(strings.Repeat("x", 5)))
 	if buf.BytesWritten() != 5 {
 		t.Errorf("expected 5 bytes, got %d", buf.BytesWritten())
 	}
 
-	buf.Write([]byte(strings.Repeat("y", 10)))
+	_, _ = buf.Write([]byte(strings.Repeat("y", 10)))
 	if buf.BytesWritten() != 10 {
 		t.Errorf("expected 10 bytes (limited by maxBytes), got %d", buf.BytesWritten())
 	}
@@ -1019,7 +1019,7 @@ func TestLimitedBuffer_NoSharedCounter(t *testing.T) {
 
 	// 再次写入应该被丢弃
 	before := buf.BytesWritten()
-	buf.Write([]byte("extra"))
+	_, _ = buf.Write([]byte("extra"))
 	if buf.BytesWritten() != before {
 		t.Errorf("bytes written changed after truncation")
 	}
@@ -1029,8 +1029,8 @@ func TestLimitedBuffer_NoSharedCounter(t *testing.T) {
 func TestLimitedBuffer_ExactlyFull(t *testing.T) {
 	buf := &LimitedBuffer{maxBytes: 10}
 
-	buf.Write([]byte("12345")) // 5
-	buf.Write([]byte("67890")) // 5, total 10
+	_, _ = buf.Write([]byte("12345")) // 5
+	_, _ = buf.Write([]byte("67890")) // 5, total 10
 
 	if buf.BytesWritten() != 10 {
 		t.Errorf("expected 10 bytes, got %d", buf.BytesWritten())
@@ -1043,7 +1043,7 @@ func TestLimitedBuffer_ExactlyFull(t *testing.T) {
 	}
 
 	// 再写一个字节
-	buf.Write([]byte("X"))
+	_, _ = buf.Write([]byte("X"))
 	if buf.BytesWritten() != 10 {
 		t.Errorf("should still have 10 bytes, got %d", buf.BytesWritten())
 	}
@@ -1057,7 +1057,7 @@ func TestLimitedBuffer_MultipleSmallWrites(t *testing.T) {
 	buf := &LimitedBuffer{maxBytes: 10}
 
 	for i := 0; i < 20; i++ {
-		buf.Write([]byte{byte('a' + i%26)})
+		_, _ = buf.Write([]byte{byte('a' + i%26)})
 	}
 
 	if buf.BytesWritten() != 10 {
@@ -1095,7 +1095,7 @@ func TestExecuteResult_Structure(t *testing.T) {
 }
 
 // 测试接口实现
-func TestLimitations(t *testing.T) {
+func TestLimitations(_ *testing.T) {
 	var _ io.Writer = (*LimitedBuffer)(nil)
 }
 

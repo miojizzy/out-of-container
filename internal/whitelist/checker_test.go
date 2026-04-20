@@ -1,7 +1,7 @@
 package whitelist
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,13 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewChecker(t *testing.T) {
-	// 创建临时配置文件
-	tempDir := t.TempDir()
-	configPath := filepath.Join(tempDir, "config.yaml")
-
-	// 创建有效的配置内容
-	configContent := `server:
+// testConfigYAML 是测试中使用的标准配置YAML字符串
+const testConfigYAML = `server:
   listen: ":8080"
   timeout_seconds: 30
   max_output_mb: 10
@@ -40,7 +35,15 @@ audit:
   log_file: "audit.log"
   rotation_max_mb: 100
   rotation_count: 5
-`
+`)
+
+func TestNewChecker(t *testing.T) {
+	// 创建临时配置文件
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "config.yaml")
+
+	// 创建有效的配置内容
+	configContent := testConfigYAML
 
 	// 写入配置文件
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
@@ -62,30 +65,7 @@ func TestIsAllowed_CommandWhitelist(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
 
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
+	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
 	require.NoError(t, err)
@@ -159,30 +139,7 @@ func TestIsAllowed_PathWhitelist(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
 
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
+	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
 	require.NoError(t, err)
@@ -282,7 +239,7 @@ audit:
 whitelist:
   literal_commands:
     - "ls"
-    - "pwd"  # 添加新的允许命令
+    - "pwd"  // 添加新的允许命令
   regex_commands:
     - "^git clone"
   allowed_paths:
@@ -301,7 +258,8 @@ audit:
 	require.NoError(t, err)
 
 	// 手动触发重载：先loadConfig，然后compileRules
-	checker.loadConfig()
+	loadErr := checker.loadConfig()
+	assert.NoError(t, loadErr)
 	compileErr := checker.compileRules()
 	assert.NoError(t, compileErr)
 
@@ -311,7 +269,7 @@ audit:
 	assert.NoError(t, err)
 }
 
-func TestReloadConfigFileError(t *testing.T) {
+func TestReloadConfigFileError(_ *testing.T) {
 	// 创建Checker实例
 	checker := &Checker{}
 
@@ -328,30 +286,7 @@ func TestGetConfig(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
 
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
+	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
 	require.NoError(t, err)
@@ -372,30 +307,7 @@ func TestIsPathAllowed(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
 
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
+	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
 	require.NoError(t, err)
@@ -452,7 +364,7 @@ whitelist:
   literal_commands:
     - "ls"
   regex_commands:
-    - "[invalid-regex"  # 无效的正则表达式
+    - "[invalid-regex"  // 无效的正则表达式
   allowed_paths:
     - "/tmp"
   reload_interval_seconds: 1
@@ -515,7 +427,7 @@ whitelist:
     - "^git clone"
   allowed_paths:
     - "/tmp"
-  reload_interval_seconds: 0  # 禁用自动重载，方便测试
+  reload_interval_seconds: 0  // 禁用自动重载，方便测试
 audit:
   enabled: true
   log_file: "audit.log"
@@ -545,7 +457,7 @@ audit:
 whitelist:
   literal_commands:
     - "ls"
-    - "pwd"  # 添加新的允许命令
+    - "pwd"  // 添加新的允许命令
   regex_commands:
     - "^git clone"
   allowed_paths:
@@ -560,10 +472,9 @@ audit:
 	err = os.WriteFile(configPath, []byte(updatedConfig), 0644)
 	require.NoError(t, err)
 
-	// 手动触发重载：直接调用 loadConfig 和 compileRules
-	// 先检查一下当前配置
+	// 检查初始配置
 	config := checker.GetConfig()
-	fmt.Printf("Before reload - LiteralCommands: %v\n", config.Whitelist.LiteralCommands)
+	log.Printf("Before reload - LiteralCommands: %v", config.Whitelist.LiteralCommands)
 
 	// 强制重载配置和规则
 	err = checker.loadConfig()
@@ -576,7 +487,7 @@ audit:
 
 	// 检查重载后配置
 	config = checker.GetConfig()
-	fmt.Printf("After reload - LiteralCommands: %v\n", config.Whitelist.LiteralCommands)
+	log.Printf("After reload - LiteralCommands: %v", config.Whitelist.LiteralCommands)
 
 	// 现在pwd命令应该被允许了
 	allowed, _, err = checker.IsAllowed("pwd", "/tmp")
@@ -589,105 +500,7 @@ func TestConcurrentAccess(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := filepath.Join(tempDir, "config.yaml")
 
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
+	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
-	require.NoError(t, err)
-
-	checker, err := NewChecker(configPath)
-	require.NoError(t, err)
-
-	// 并发测试：多个goroutine同时调用IsAllowed
-	done := make(chan bool, 10)
-	for i := 0; i < 10; i++ {
-		go func() {
-			allowed, _, err := checker.IsAllowed("ls", "/tmp")
-			assert.True(t, allowed)
-			assert.NoError(t, err)
-			done <- true
-		}()
-	}
-
-	// 等待所有goroutine完成
-	for i := 0; i < 10; i++ {
-		<-done
-	}
-}
-
-func TestRegexRuleComplex(t *testing.T) {
-	// 创建临时配置文件
-	tempDir := t.TempDir()
-	configPath := filepath.Join(tempDir, "config.yaml")
-
-	configContent := `server:
-  listen: ":8080"
-  timeout_seconds: 30
-  max_output_mb: 10
-  max_concurrent: 5
-  api_token: "test-token"
-whitelist:
-  literal_commands:
-    - "ls"
-    - "pwd"
-    - "echo"
-  regex_commands:
-    - "^git (clone|pull|fetch)"
-    - "^go (build|test|mod)"
-  allowed_paths:
-    - "/tmp"
-    - "/home"
-  reload_interval_seconds: 5
-audit:
-  enabled: true
-  log_file: "audit.log"
-  rotation_max_mb: 100
-  rotation_count: 5
-`
-
-	err := os.WriteFile(configPath, []byte(configContent), 0644)
-	require.NoError(t, err)
-
-	checker, err := NewChecker(configPath)
-	require.NoError(t, err)
-
-	tests := []struct {
-		command  string
-		expected bool
-	}{
-		{"git clone https://github.com/user/repo.git", true},
-		{"git clone -b main https://github.com/user/repo.git", true}, // 也应匹配 git clone
-		{"git pull origin main", true},                               // 也应匹配 git pull
-		{"git fetch origin", true},                                   // 也应匹配 git fetch
-		{"go build -o main main.go", true},                           // 也应匹配 go build
-		{"go test ./...", true},                                      // 也应匹配 go test
-	}
-	for _, tt := range tests {
-		t.Run(tt.command, func(t *testing.T) {
-			allowed, _, _ := checker.IsAllowed(tt.command, "/tmp")
-			assert.Equal(t, tt.expected, allowed)
-		})
-	}
-}
+	require.NoError

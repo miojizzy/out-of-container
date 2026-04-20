@@ -25,7 +25,7 @@ func TestLoader_Load(t *testing.T) {
 				TimeoutSeconds: 30,
 				MaxOutputMB:    10,
 				MaxConcurrent:  5,
-				ApiToken:       "test-token",
+				APIToken:       "test-token",
 			},
 			Whitelist: models.WhitelistConfig{
 				LiteralCommands: []string{"ls", "pwd"},
@@ -86,7 +86,7 @@ func TestLoader_Load(t *testing.T) {
 				TimeoutSeconds: 30,
 				MaxOutputMB:    10,
 				MaxConcurrent:  5,
-				ApiToken:       "", // Empty API token
+				APIToken:       "", // Empty API token
 			},
 			Whitelist: models.WhitelistConfig{
 				LiteralCommands: []string{"ls", "pwd"},
@@ -118,7 +118,7 @@ func TestLoader_Load(t *testing.T) {
 				TimeoutSeconds: 30,
 				MaxOutputMB:    10,
 				MaxConcurrent:  5,
-				ApiToken:       "test-token",
+				APIToken:       "test-token",
 			},
 			Whitelist: models.WhitelistConfig{
 				LiteralCommands: []string{}, // Empty literal commands
@@ -150,7 +150,7 @@ func TestLoader_Load(t *testing.T) {
 				TimeoutSeconds: 30,
 				MaxOutputMB:    10,
 				MaxConcurrent:  5,
-				ApiToken:       "test-token",
+				APIToken:       "test-token",
 			},
 			Whitelist: models.WhitelistConfig{
 				LiteralCommands: []string{"ls", "pwd"},
@@ -182,7 +182,7 @@ func TestLoader_Load(t *testing.T) {
 				TimeoutSeconds: 30,
 				MaxOutputMB:    10,
 				MaxConcurrent:  5,
-				ApiToken:       "test-token",
+				APIToken:       "test-token",
 			},
 			Whitelist: models.WhitelistConfig{
 				LiteralCommands: []string{"ls", "pwd"},
@@ -214,7 +214,7 @@ func TestLoader_validate(t *testing.T) {
 	t.Run("ValidConfig", func(t *testing.T) {
 		config := &models.Config{
 			Server: models.ServerConfig{
-				ApiToken: "test-token",
+				APIToken: "test-token",
 			},
 			Whitelist: models.WhitelistConfig{
 				LiteralCommands: []string{"ls"},
@@ -230,7 +230,7 @@ func TestLoader_validate(t *testing.T) {
 	t.Run("MissingAPIToken", func(t *testing.T) {
 		config := &models.Config{
 			Server: models.ServerConfig{
-				ApiToken: "", // Empty API token
+				APIToken: "", // Empty API token
 			},
 			Whitelist: models.WhitelistConfig{
 				LiteralCommands: []string{"ls"},
@@ -247,7 +247,7 @@ func TestLoader_validate(t *testing.T) {
 	t.Run("NoWhitelistCommands", func(t *testing.T) {
 		config := &models.Config{
 			Server: models.ServerConfig{
-				ApiToken: "test-token",
+				APIToken: "test-token",
 			},
 			Whitelist: models.WhitelistConfig{
 				LiteralCommands: []string{}, // Empty literal commands
@@ -264,7 +264,7 @@ func TestLoader_validate(t *testing.T) {
 	t.Run("NoAllowedPaths", func(t *testing.T) {
 		config := &models.Config{
 			Server: models.ServerConfig{
-				ApiToken: "test-token",
+				APIToken: "test-token",
 			},
 			Whitelist: models.WhitelistConfig{
 				LiteralCommands: []string{"ls"},
@@ -281,7 +281,7 @@ func TestLoader_validate(t *testing.T) {
 	t.Run("NonExistentAllowedPath", func(t *testing.T) {
 		config := &models.Config{
 			Server: models.ServerConfig{
-				ApiToken: "test-token",
+				APIToken: "test-token",
 			},
 			Whitelist: models.WhitelistConfig{
 				LiteralCommands: []string{"ls"},
@@ -334,7 +334,7 @@ func TestLoader_InitConfig(t *testing.T) {
 		// Load and verify the config
 		loadedConfig, err := loader.Load()
 		assert.NoError(t, err)
-		assert.NotEmpty(t, loadedConfig.Server.ApiToken)
+		assert.NotEmpty(t, loadedConfig.Server.APIToken)
 		assert.Equal(t, "0.0.0.0:8080", loadedConfig.Server.Listen)
 		assert.NotEmpty(t, loadedConfig.Whitelist.LiteralCommands)
 	})
@@ -347,7 +347,7 @@ func TestLoader_InitConfig(t *testing.T) {
 		existingConfig := &models.Config{
 			Server: models.ServerConfig{
 				Listen:   "127.0.0.1:8080",
-				ApiToken: "existing-token",
+				APIToken: "existing-token",
 			},
 			Whitelist: models.WhitelistConfig{
 				LiteralCommands: []string{"ls"},

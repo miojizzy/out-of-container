@@ -1,9 +1,13 @@
+// Package config 提供配置文件加载和管理功能。
+//
+// 支持YAML格式的配置文件，包含服务器、白名单、审计等配置项。
 package config
 
 import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -43,7 +47,7 @@ func (l *Loader) Load() (*models.Config, error) {
 
 // validate checks config validity
 func (l *Loader) validate(config *models.Config) error {
-	if config.Server.ApiToken == "" {
+	if config.Server.APIToken == "" {
 		return fmt.Errorf("api_token is required")
 	}
 
@@ -85,7 +89,7 @@ func (l *Loader) InitConfig() error {
 			TimeoutSeconds: 30,
 			MaxOutputMB:    10,
 			MaxConcurrent:  5,
-			ApiToken:       token,
+			APIToken:       token,
 			TaskTTLHours:   24,
 		},
 		Whitelist: models.WhitelistConfig{
@@ -137,9 +141,9 @@ func (l *Loader) InitConfig() error {
 
 	fmt.Printf("Config file created: %s\n", l.configPath)
 	fmt.Printf("API Token: %s\n", token)
-	fmt.Println("\nPlease edit the config file to customize:")
-	fmt.Println("  - literal_commands: Add your allowed commands")
-	fmt.Println("  - allowed_paths: Set your project directories")
+	log.Println("\nPlease edit the config file to customize:")
+	log.Println("  - literal_commands: Add your allowed commands")
+	log.Println("  - allowed_paths: Set your project directories")
 
 	return nil
 }

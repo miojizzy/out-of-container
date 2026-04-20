@@ -1,3 +1,7 @@
+// Package main 提供容器外命令执行客户端工具。
+//
+// ooc-client 是一个命令行工具，用于向 exec-server 发送命令执行请求。
+// 支持命令发现模式和命令执行模式。
 package main
 
 import (
@@ -6,13 +10,28 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
+
+// 版本信息，在构建时通过 -ldflags 注入
+var (
+	Version   = "dev"
+	BuildTime = ""
+)
+
+func init() {
+	// 如果 BuildTime 未设置，使用当前时间
+	if BuildTime == "" {
+		BuildTime = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	}
+}
 
 // WhitelistInfoResponse 白名单信息发现响应结构体
 type WhitelistInfoResponse struct {
@@ -24,7 +43,7 @@ type WhitelistInfoResponse struct {
 
 type ClientConfig struct {
 	ServerURL     string `yaml:"server_url"`
-	ApiToken      string `yaml:"api_token"`
+	APIToken      string `yaml:"api_token"`
 	TimeoutSecond int    `yaml:"timeout_seconds"`
 }
 
@@ -57,22 +76,40 @@ var (
 	listCommands  = flag.Bool("list-commands", false, "List available commands from server")
 	listPaths     = flag.Bool("list-paths", false, "List allowed paths from server")
 	discoveryOnly = flag.Bool("discovery-only", false, "Only perform discovery, don't execute commands")
+	version       = flag.Bool("version", false, "Show version information")
 )
 
 func main() {
+	os.Exit(run())
+}
+
+// run 是主逻辑入口，返回退出码。将逻辑提取到独立函数以确保 defer 正常执行。
+func run() int {
 	flag.Parse()
+
+	// 显示版本信息
+	if *version {
+		log.Printf("ooc-client version %s", Version)
+		log.Printf("Build time: %s", BuildTime)
+		return 0
+	}
 
 	// Load config
 	configFile := *configPath
 	if configFile == "" {
-		home, _ := os.UserHomeDir()
+		home, err := os.UserHomeDir()
+		if err != nil {
+			log.Printf("Failed to get user home directory: %v", err)
+			printHelp()
+			return 1
+		}
 		configFile = filepath.Join(home, ".config/ooc-client/config.yaml")
 	}
 
 	var cfg ClientConfig
 	if data, err := os.ReadFile(configFile); err == nil {
 		if err := yaml.Unmarshal(data, &cfg); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse config file: %v\n", err)
+			log.Printf("Failed to parse config file: %v", err)
 		}
 	}
 
@@ -81,32 +118,32 @@ func main() {
 		cfg.ServerURL = *serverURL
 	}
 	if *apiToken != "" {
-		cfg.ApiToken = *apiToken
+		cfg.APIToken = *apiToken
 	}
 
 	// Validate
 	if cfg.ServerURL == "" {
-		fmt.Fprintln(os.Stderr, "Server URL required (set in config or use -server flag)")
+		log.Println("Server URL required (set in config or use -server flag)")
 		printHelp()
-		os.Exit(1)
+		return 1
 	}
-	if cfg.ApiToken == "" {
-		fmt.Fprintln(os.Stderr, "API token required (set in config or use -token flag)")
+	if cfg.APIToken == "" {
+		log.Println("API token required (set in config or use -token flag)")
 		printHelp()
-		os.Exit(1)
+		return 1
 	}
 
 	// 发现模式处理
 	if *listCommands || *listPaths || *discoveryOnly {
 		handleDiscovery(cfg)
-		return
+		return 0
 	}
 
 	// 命令执行模式验证
 	if *command == "" {
-		fmt.Fprintln(os.Stderr, "Command required (use -command flag) or use discovery flags (-list-commands, -list-paths)")
+		log.Println("Command required (use -command flag) or use discovery flags (-list-commands, -list-paths)")
 		printHelp()
-		os.Exit(1)
+		return 1
 	}
 	if *cwd == "" {
 		cwd = new(string)
@@ -131,35 +168,51 @@ func main() {
 		Cwd:     *cwd,
 	}
 
-	body, _ := json.Marshal(req)
-	httpReq, _ := http.NewRequest("POST", cfg.ServerURL+"/ooc-exec", bytes.NewReader(body))
-	httpReq.Header.Set("Authorization", "Bearer "+cfg.ApiToken)
+	body, err := json.Marshal(req)
+	if err != nil {
+		log.Printf("Failed to marshal request: %v", err)
+		return 1
+	}
+	httpReq, err := http.NewRequest("POST", cfg.ServerURL+"/ooc-exec", bytes.NewReader(body))
+	if err != nil {
+		log.Printf("Failed to create request: %v", err)
+		return 1
+	}
+	httpReq.Header.Set("Authorization", "Bearer "+cfg.APIToken)
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(httpReq)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Request failed: %v\n", err)
-		os.Exit(1)
+		log.Printf("Request failed: %v", err)
+		return 1
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
-	respBody, _ := io.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Failed to read response body: %v", err)
+		return 1
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		var errResp ErrorResponse
 		if err := json.Unmarshal(respBody, &errResp); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse error response: %v\n", err)
-			os.Exit(1)
+			log.Printf("Failed to parse error response: %v", err)
+			return 1
 		}
-		fmt.Fprintf(os.Stderr, "Error: %s - %s\n", errResp.Error, errResp.Message)
-		os.Exit(1)
+		log.Printf("Error: %s - %s", errResp.Error, errResp.Message)
+		return 1
 	}
 
 	var execResp ExecResponse
 	if err := json.Unmarshal(respBody, &execResp); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to parse response: %v\n", err)
-		os.Exit(1)
+		log.Printf("Failed to parse response: %v", err)
+		return 1
 	}
 
 	fmt.Print(execResp.Stdout)
@@ -170,7 +223,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "\n[Output truncated at 10MB]")
 	}
 
-	os.Exit(execResp.ExitCode)
+	return execResp.ExitCode
 }
 
 // handleDiscovery 处理白名单信息发现请求
@@ -178,7 +231,7 @@ func handleDiscovery(cfg ClientConfig) {
 	// 查询服务器白名单信息
 	info, err := fetchWhitelistInfo(cfg)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Discovery failed: %v\n", err)
+		log.Printf("Discovery failed: %v", err)
 		os.Exit(1)
 	}
 
@@ -206,14 +259,18 @@ func fetchWhitelistInfo(cfg ClientConfig) (*WhitelistInfoResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+cfg.ApiToken)
+	req.Header.Set("Authorization", "Bearer "+cfg.APIToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("Failed to close response body: %v", err)
+		}
+	}()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {

@@ -1,3 +1,6 @@
+// Package whitelist 提供命令白名单验证功能。
+//
+// 实现了基于字面量和正则表达式的命令和路径白名单检查机制。
 package whitelist
 
 import (
@@ -12,6 +15,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// ErrCommandNotInWhitelist 是命令不在白名单中错误
+// ErrPathNotAllowed 是路径不在允许路径中错误
 var (
 	ErrCommandNotInWhitelist = errors.New("command not in whitelist")
 	ErrPathNotAllowed        = errors.New("path not in allowed_paths")

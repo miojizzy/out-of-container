@@ -15,14 +15,17 @@ type LiteralRule struct {
 	command string
 }
 
+// NewLiteralRule creates a new literal matching rule
 func NewLiteralRule(command string) *LiteralRule {
 	return &LiteralRule{command: command}
 }
 
+// Match checks if the command exactly matches the rule's command
 func (r *LiteralRule) Match(command string) (bool, error) {
 	return command == r.command, nil
 }
 
+// Type returns the rule type as "literal"
 func (r *LiteralRule) Type() string {
 	return "literal"
 }
@@ -33,6 +36,7 @@ type RegexRule struct {
 	regex   string
 }
 
+// NewRegexRule creates a new regex matching rule
 func NewRegexRule(regex string) (*RegexRule, error) {
 	re, err := regexp.Compile(regex)
 	if err != nil {
@@ -41,10 +45,12 @@ func NewRegexRule(regex string) (*RegexRule, error) {
 	return &RegexRule{pattern: re, regex: regex}, nil
 }
 
+// Match checks if the command matches this regex rule
 func (r *RegexRule) Match(command string) (bool, error) {
 	return r.pattern.MatchString(command), nil
 }
 
+// Type returns the rule type as "regex"
 func (r *RegexRule) Type() string {
 	return "regex"
 }

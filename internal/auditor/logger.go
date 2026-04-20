@@ -1,3 +1,6 @@
+// Package auditor 提供审计日志功能。
+//
+// 实现了基于文件的审计日志系统，支持旋转、缓冲写入和异步处理。
 package auditor
 
 import (
@@ -110,21 +113,31 @@ func (a *Auditor) writeEntry(entry *models.AuditEntry) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil {
+			fmt.Fprintf(os.Stderr, "failed to close log file: %v\n", closeErr)
+		}
+	}()
 
 	// Check if rotation needed
-	if info, err := f.Stat(); err == nil {
+	if info, statErr := f.Stat(); statErr == nil {
 		if info.Size() >= a.rotationMaxMB*1024*1024 {
-			f.Close()
-			if err := a.rotateLog(); err != nil {
-				return err
+			if closeErr := f.Close(); closeErr != nil {
+				return fmt.Errorf("failed to close log file before rotation: %w", closeErr)
+			}
+			if rotateErr := a.rotateLog(); rotateErr != nil {
+				return rotateErr
 			}
 			// Reopen file
 			f, err = os.OpenFile(a.logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 			if err != nil {
 				return err
 			}
-			defer f.Close()
+			defer func() {
+				if closeErr := f.Close(); closeErr != nil {
+					fmt.Fprintf(os.Stderr, "failed to close log file: %v\n", closeErr)
+				}
+			}()
 		}
 	}
 

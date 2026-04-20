@@ -1,7 +1,12 @@
+// Package main 提供 exec-server HTTP 服务器。
+//
+// ooc-server 是容器外命令执行系统的服务器端，负责接收执行请求、
+// 验证白名单、审计日志、并发控制和任务管理。
 package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -17,17 +22,47 @@ import (
 	"github.com/user/exec-server/pkg/config"
 )
 
+// 版本信息，在构建时通过 -ldflags 注入
+var (
+	Version   = "dev"
+	BuildTime = ""
+)
+
+func init() {
+	// 如果 BuildTime 未设置，使用当前时间
+	if BuildTime == "" {
+		BuildTime = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	}
+}
+
 var (
 	configPath = flag.String("config", "", "Path to config file")
 	initMode   = flag.Bool("init", false, "Initialize config file")
+	version    = flag.Bool("version", false, "Show version information")
 )
 
 func main() {
+	os.Exit(run())
+}
+
+// run 是主逻辑入口，返回退出码。将逻辑提取到独立函数以确保 defer 正常执行。
+func run() int {
 	flag.Parse()
+
+	// 显示版本信息
+	if *version {
+		log.Printf("ooc-server version %s", Version)
+		log.Printf("Build time: %s", BuildTime)
+		return 0
+	}
 
 	// Expand config path
 	if *configPath == "" {
-		home, _ := os.UserHomeDir()
+		home, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to get user home directory: %v\n", err)
+			return 1
+		}
 		*configPath = home + "/.config/ooc-server/config.yaml"
 	}
 
@@ -36,21 +71,24 @@ func main() {
 	// Handle init mode
 	if *initMode {
 		if err := loader.InitConfig(); err != nil {
-			log.Fatalf("Failed to initialize config: %v", err)
+			fmt.Fprintf(os.Stderr, "Failed to initialize config: %v\n", err)
+			return 1
 		}
-		return
+		return 0
 	}
 
 	// Load config
 	cfg, err := loader.Load()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
+		return 1
 	}
 
 	// Initialize components
 	whitelistChecker, err := whitelist.NewChecker(*configPath)
 	if err != nil {
-		log.Fatalf("Failed to initialize whitelist checker: %v", err)
+		fmt.Fprintf(os.Stderr, "Failed to initialize whitelist checker: %v\n", err)
+		return 1
 	}
 
 	aud := auditor.NewAuditor(
@@ -58,13 +96,17 @@ func main() {
 		cfg.Audit.RotationMaxMB,
 		cfg.Audit.RotationCount,
 	)
-	defer aud.Close()
+	defer func() {
+		if err := aud.Close(); err != nil {
+			log.Printf("Failed to close auditor: %v\n", err)
+		}
+	}()
 
 	exec := executor.NewExecutor(cfg.Server.TimeoutSeconds, cfg.Server.MaxOutputMB)
 
 	// Initialize task manager
 	taskStore := task.NewMemoryStore()
-	taskManager := task.NewTaskManager(
+	taskManager := task.NewManager(
 		taskStore,
 		exec,
 		whitelistChecker,
@@ -81,13 +123,13 @@ func main() {
 		exec,
 		whitelistChecker,
 		aud,
-		cfg.Server.ApiToken,
+		cfg.Server.APIToken,
 		cfg.Server.MaxConcurrent,
 	)
 
 	whitelistInfoHandler := handlers.NewWhitelistInfoHandler(
 		whitelistChecker,
-		cfg.Server.ApiToken,
+		cfg.Server.APIToken,
 	)
 
 	taskHandler := handlers.NewTaskHandler(taskManager)
@@ -110,12 +152,17 @@ func main() {
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 		log.Println("Shutting down server...")
-		server.Close()
+		if err := server.Close(); err != nil {
+			log.Printf("Server shutdown error: %v\n", err)
+		}
 	}()
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.Server.Listen)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("Server failed: %v", err)
+		fmt.Fprintf(os.Stderr, "Server failed: %v\n", err)
+		return 1
 	}
+
+	return 0
 }

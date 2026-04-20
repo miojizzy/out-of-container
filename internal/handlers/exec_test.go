@@ -25,7 +25,11 @@ func TestExecHandler_AuditLog(t *testing.T) {
 
 	// Create auditor
 	aud := auditor.NewAuditor(logFile, 10, 3)
-	defer aud.Close()
+	defer func() {
+		if err := aud.Close(); err != nil {
+			t.Logf("Warning: failed to close auditor: %v", err)
+		}
+	}()
 
 	// Create a temporary config file for whitelist
 	configFile := filepath.Join(tempDir, "config.yaml")
@@ -36,7 +40,9 @@ whitelist:
   allowed_paths:
     - "/tmp"
 `
-	os.WriteFile(configFile, []byte(configContent), 0644)
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
+		t.Fatalf("Failed to write config file: %v", err)
+	}
 
 	// Create whitelist checker
 	whitelistChecker, err := whitelist.NewChecker(configFile)
@@ -74,7 +80,11 @@ whitelist:
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			t.Logf("Warning: failed to close response body: %v", err)
+		}
+	}()
 
 	// Check response
 	if resp.StatusCode != http.StatusOK {

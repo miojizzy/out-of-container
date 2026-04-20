@@ -14,7 +14,7 @@ func TestMemoryStore_Save(t *testing.T) {
 		Args:    []string{"hello"},
 		Cwd:     "/tmp",
 	}
-	task := NewTask(cmd)
+	task := NewTask(cmd, "")
 
 	// 保存任务
 	if err := store.Save(task); err != nil {
@@ -42,7 +42,7 @@ func TestMemoryStore_Get(t *testing.T) {
 		Args:    []string{"-la"},
 		Cwd:     "/home",
 	}
-	task := NewTask(cmd)
+	task := NewTask(cmd, "")
 
 	// 保存任务
 	if err := store.Save(task); err != nil {
@@ -60,8 +60,8 @@ func TestMemoryStore_Get(t *testing.T) {
 
 	// 获取不存在的任务
 	_, err = store.Get("non-existent-id")
-	if !IsTaskNotFoundError(err) {
-		t.Errorf("Expected TaskNotFoundError, got %v", err)
+	if !IsNotFoundError(err) {
+		t.Errorf("Expected NotFoundError, got %v", err)
 	}
 }
 
@@ -72,7 +72,7 @@ func TestMemoryStore_Update(t *testing.T) {
 		Args:    []string{"5"},
 		Cwd:     "/tmp",
 	}
-	task := NewTask(cmd)
+	task := NewTask(cmd, "")
 
 	// 保存任务
 	if err := store.Save(task); err != nil {
@@ -80,7 +80,7 @@ func TestMemoryStore_Update(t *testing.T) {
 	}
 
 	// 更新为 running 状态
-	if err := store.Update(task.ID, TaskStatusRunning, nil, nil); err != nil {
+	if err := store.Update(task.ID, StatusRunning, nil, nil); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
@@ -89,7 +89,7 @@ func TestMemoryStore_Update(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
-	if loaded.Status != TaskStatusRunning {
+	if loaded.Status != StatusRunning {
 		t.Errorf("Expected status 'running', got %s", loaded.Status)
 	}
 	if loaded.StartedAt == nil {
@@ -104,7 +104,7 @@ func TestMemoryStore_Update(t *testing.T) {
 		DurationMs: 5000,
 		Truncated:  false,
 	}
-	if err := store.Update(task.ID, TaskStatusCompleted, result, nil); err != nil {
+	if err := store.Update(task.ID, StatusCompleted, result, nil); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
@@ -113,7 +113,7 @@ func TestMemoryStore_Update(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
-	if loaded.Status != TaskStatusCompleted {
+	if loaded.Status != StatusCompleted {
 		t.Errorf("Expected status 'completed', got %s", loaded.Status)
 	}
 	if loaded.CompletedAt == nil {
@@ -134,7 +134,7 @@ func TestMemoryStore_Delete(t *testing.T) {
 		Args:    []string{},
 		Cwd:     "/",
 	}
-	task := NewTask(cmd)
+	task := NewTask(cmd, "")
 
 	// 保存任务
 	if err := store.Save(task); err != nil {
@@ -148,14 +148,14 @@ func TestMemoryStore_Delete(t *testing.T) {
 
 	// 验证任务已被删除
 	_, err := store.Get(task.ID)
-	if !IsTaskNotFoundError(err) {
-		t.Errorf("Expected TaskNotFoundError, got %v", err)
+	if !IsNotFoundError(err) {
+		t.Errorf("Expected NotFoundError, got %v", err)
 	}
 
 	// 删除不存在的任务
 	if err := store.Delete("non-existent-id"); err != nil {
-		if !IsTaskNotFoundError(err) {
-			t.Errorf("Expected TaskNotFoundError, got %v", err)
+		if !IsNotFoundError(err) {
+			t.Errorf("Expected NotFoundError, got %v", err)
 		}
 	}
 }
@@ -172,8 +172,8 @@ func TestMemoryStore_GetAll(t *testing.T) {
 		Args:    []string{"-la"},
 		Cwd:     "/home",
 	}
-	task1 := NewTask(cmd1)
-	task2 := NewTask(cmd2)
+	task1 := NewTask(cmd1, "")
+	task2 := NewTask(cmd2, "")
 
 	// 保存两个任务
 	if err := store.Save(task1); err != nil {
@@ -219,8 +219,8 @@ func TestMemoryStore_CleanupExpired(t *testing.T) {
 		Args:    []string{"-la"},
 		Cwd:     "/home",
 	}
-	task1 := NewTask(cmd1)
-	task2 := NewTask(cmd2)
+	task1 := NewTask(cmd1, "")
+	task2 := NewTask(cmd2, "")
 
 	// 保存任务
 	if err := store.Save(task1); err != nil {
@@ -231,9 +231,9 @@ func TestMemoryStore_CleanupExpired(t *testing.T) {
 	}
 
 	// 模拟任务1已完成，任务2还在运行
-	task1.Status = TaskStatusCompleted
+	task1.Status = StatusCompleted
 	task1.CompletedAt = &time.Time{}
-	task2.Status = TaskStatusRunning
+	task2.Status = StatusRunning
 
 	// 清理1秒前的任务
 	if err := store.CleanupExpired(1 * time.Second); err != nil {
@@ -242,8 +242,8 @@ func TestMemoryStore_CleanupExpired(t *testing.T) {
 
 	// 验证已完成的任务被清理
 	_, err := store.Get(task1.ID)
-	if !IsTaskNotFoundError(err) {
-		t.Errorf("Expected TaskNotFoundError for completed task, got %v", err)
+	if !IsNotFoundError(err) {
+		t.Errorf("Expected NotFoundError for completed task, got %v", err)
 	}
 
 	// 验证正在运行的任务未被清理
@@ -260,7 +260,7 @@ func TestMemoryStore_CleanupExpired(t *testing.T) {
 		Command: "sleep",
 		Args:    []string{"1000"},
 		Cwd:     "/tmp",
-	})
+	}, "")
 	// 设置创建时间为1小时之前
 	task3.CreatedAt = time.Now().Add(-1 * time.Hour)
 	if err := store.Save(task3); err != nil {
@@ -274,23 +274,23 @@ func TestMemoryStore_CleanupExpired(t *testing.T) {
 
 	// 验证长时间未完成的挂起任务被清理
 	_, err = store.Get(task3.ID)
-	if !IsTaskNotFoundError(err) {
-		t.Errorf("Expected TaskNotFoundError for pending task, got %v", err)
+	if !IsNotFoundError(err) {
+		t.Errorf("Expected NotFoundError for pending task, got %v", err)
 	}
 }
 
-func TestTaskNotFoundError(t *testing.T) {
+func TestNotFoundError(t *testing.T) {
 	err := ErrTaskNotFound
 
 	if err.Error() != "task not found" {
 		t.Errorf("Expected error message 'task not found', got %s", err.Error())
 	}
 
-	if !IsTaskNotFoundError(err) {
-		t.Error("Expected IsTaskNotFoundError to return true")
+	if !IsNotFoundError(err) {
+		t.Error("Expected IsNotFoundError to return true")
 	}
 
-	if !IsTaskNotFoundError(&TaskNotFoundError{}) {
-		t.Error("Expected IsTaskNotFoundError to return true for *TaskNotFoundError")
+	if !IsNotFoundError(&NotFoundError{}) {
+		t.Error("Expected IsNotFoundError to return true for *NotFoundError")
 	}
 }
