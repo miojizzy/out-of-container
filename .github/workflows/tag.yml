@@ -25,6 +25,8 @@ jobs:
       github.event.pull_request.merged == true
     permissions:
       contents: write
+    outputs:
+      new_version: ${{ steps.version.outputs.new_version }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -74,3 +76,11 @@ jobs:
         # 推送精确 ref，避免误推其他内容
         git push origin "refs/tags/$TAG"
         echo "成功推送 tag: $TAG"
+
+  release:
+    needs: tag
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.tag.outputs.new_version }}
+    permissions:
+      contents: write
