@@ -32,6 +32,11 @@ jobs:
         MINOR=$(echo "$VERSION_STR" | awk -F'.' '{print $2}')
         PATCH=$(echo "$VERSION_STR" | awk -F'.' '{print $3}')
 
+        # 移除前导零，防止被当作八进制数处理
+        MAJOR=$((10#$MAJOR))
+        MINOR=$((10#$MINOR))
+        PATCH=$((10#$PATCH))
+
         # 增加补丁版本号
         PATCH=$((PATCH + 1))
         # 格式化版本号：一级一位，二级两位用0填首位，三级三位用0填首位
