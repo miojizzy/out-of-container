@@ -1,11 +1,5 @@
 # golangci-lint 配置 - 本项目推荐配置
 # 文档: https://golangci-lint.run/usage/configuration/
-version: 2
-
-formatters:
-  enable:
-    - gofmt
-    - goimports
 
 linters:
   enable:
@@ -102,7 +96,7 @@ issues:
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-generated: strict
+  exclude-generated: true
 
 run:
   timeout: 5m
