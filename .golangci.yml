@@ -1,11 +1,7 @@
 # golangci-lint 配置 - 本项目推荐配置
+# 配置格式: v1（兼容 golangci-lint v1.64.8）
 # 文档: https://golangci-lint.run/usage/configuration/
-version: 2
-
-formatters:
-  enable:
-    - gofmt
-    - goimports
+version: 1
 
 linters:
   enable:
@@ -20,15 +16,15 @@ linters:
     - revive        # 代码风格检查器
     - misspell      # 检查拼写错误
     - dupl          # 检查重复代码
+    - gofmt         # 代码格式化检查
+    - goimports     # import 排序检查
 
 linters-settings:
   errcheck:
     check-type-assertions: true
     check-blank: false
-    # 排除一些常见的不需要检查的函数
-    exclude-functions:
-      - fmt:.*
-      - io/ioutil:^Read.*
+    # v1.64.8 兼容：使用 ignore 而非 exclude-functions
+    ignore: fmt:.*,io/ioutil:^Read.*
 
   govet:
     enable-all: true
