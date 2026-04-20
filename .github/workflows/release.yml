@@ -1,9 +1,9 @@
 name: Release
 
 on:
-  workflow_run:
-    workflows: ["Auto Tag on Merge"]
-    types: [completed]
+  push:
+    tags:
+      - 'v[0-9]*'
 
 permissions:
   contents: write
@@ -12,7 +12,6 @@ jobs:
   build-and-release:
     name: Build and Release
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout code
@@ -29,9 +28,11 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          # 获取最新的tag
-          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          # 直接使用触发此工作流的 tag，不再从仓库推断
+          VERSION="${GITHUB_REF_NAME}"
           echo "VERSION=${VERSION#v}" >> $GITHUB_OUTPUT
+          echo "TAG=${VERSION}" >> $GITHUB_OUTPUT
+          echo "构建版本: $VERSION"
 
       - name: Build server binaries
         run: |
@@ -64,87 +65,14 @@ jobs:
           sha256sum ooc-client-linux-amd64 > ooc-client-linux-amd64.sha256
           sha256sum ooc-client-linux-arm64 > ooc-client-linux-arm64.sha256
 
-          # Combine all checksums
           cat *.sha256 > checksums.txt
-
-      - name: Create release notes
-        id: release_notes
-        run: |
-          cat > release_notes.md << 'EOF'
-          ## ooc-server ${{ steps.get_version.outputs.VERSION }}
-
-          容器远程命令执行系统 - Phase 1 正式发布
-
-          ### 功能特性
-
-          - ✅ **安全性**
-            - API Token 认证（crypto/rand + constant-time 比较）
-            - 白名单控制（literal + regex）
-            - 工作目录限制（防止路径跳转）
-            - Shell 元字符检测（防止命令注入）
-            - 审计日志（JSONL 格式，自动轮转）
-
-          - ✅ **性能与可靠性**
-            - 并发控制（最大 5 并发）
-            - 超时控制（30s）
-            - 输出大小限制（10MB）
-            - 进程组清理
-            - 配置热重载（5s 检查间隔）
-
-          - ✅ **易用性**
-            - 单二进制部署
-            - 配置文件外部化
-            - 兼容老系统（CentOS 7 / glibc 2.17+）
-
-          ### 安装
-
-          ```bash
-          # Linux x86_64
-          curl -L -o ooc-server https://github.com/miojizzy/out-of-container/releases/download/${{ steps.get_version.outputs.VERSION }}/ooc-server-linux-amd64
-          chmod +x ooc-server
-
-          curl -L -o ooc-client https://github.com/miojizzy/out-of-container/releases/download/${{ steps.get_version.outputs.VERSION }}/ooc-client-linux-amd64
-          chmod +x ooc-client
-          ```
-
-          ### 快速开始
-
-          1. 初始化配置：
-             ```bash
-             ./ooc-server --init
-             ```
-
-          2. 编辑配置文件（`~/.config/ooc-server/config.yaml`）设置白名单
-
-          3. 启动 server：
-             ```bash
-             ./ooc-server --config ~/.config/ooc-server/config.yaml
-             ```
-
-          4. 使用 client 执行命令：
-             ```bash
-             ./ooc-client -command make -cwd /path/to/project
-             ```
-
-          ### 文档
-
-          - [README.md](https://github.com/miojizzy/out-of-container/blob/main/README.md) - 完整使用文档
-          - [设计文档](https://github.com/miojizzy/out-of-container/blob/main/design/zhaozeyu-main-design-20260401-050215.md) - 架构设计和评审
-
-          ### 下一步计划
-
-          - Phase 2: 异步执行模式
-          - Phase 3: SSE 流式输出
-
-          ---
-
-          **Built with ❤️ for AI-assisted development**
-          EOF
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          body_path: release_notes.md
+          tag_name: ${{ steps.get_version.outputs.TAG }}
+          name: Release ${{ steps.get_version.outputs.TAG }}
+          generate_release_notes: true
           files: |
             ooc-server-linux-amd64
             ooc-server-linux-arm64
