@@ -24,8 +24,8 @@ type ExecHandler struct {
 	executor  *executor.Executor
 	whitelist *whitelist.Checker
 	auditor   *auditor.Auditor
-	auth      *auth.AuthMiddleware
-	limiter   *concurrency.ConcurrencyLimiter
+	auth      *auth.Middleware
+	limiter   *concurrency.Limiter
 }
 
 // NewExecHandler creates a new exec handler
@@ -40,8 +40,8 @@ func NewExecHandler(
 		executor:  exec,
 		whitelist: whitelistChecker,
 		auditor:   aud,
-		auth:      auth.NewAuthMiddleware(apiToken),
-		limiter:   concurrency.NewConcurrencyLimiter(maxConcurrent),
+		auth:      auth.NewMiddleware(apiToken),
+		limiter:   concurrency.NewLimiter(maxConcurrent),
 	}
 }
 

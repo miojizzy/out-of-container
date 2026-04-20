@@ -24,7 +24,7 @@ type WhitelistInfoResponse struct {
 // WhitelistInfoHandler 处理白名单信息发现请求
 type WhitelistInfoHandler struct {
 	whitelist *whitelist.Checker
-	auth      *auth.AuthMiddleware
+	auth      *auth.Middleware
 }
 
 // NewWhitelistInfoHandler 创建新的白名单信息处理器
@@ -34,7 +34,7 @@ func NewWhitelistInfoHandler(
 ) *WhitelistInfoHandler {
 	return &WhitelistInfoHandler{
 		whitelist: whitelistChecker,
-		auth:      auth.NewAuthMiddleware(apiToken),
+		auth:      auth.NewMiddleware(apiToken),
 	}
 }
 

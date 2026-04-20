@@ -24,11 +24,10 @@ const (
 	StatusTimeout   Status = "timeout"
 )
 
-
-// TaskManagerInterface 定义任务管理器接口，用于解耦 handlers 包
+// ManagerInterface 定义任务管理器接口，用于解耦 handlers 包
 // 以避免导入循环
 // 其他包应该依赖此接口，而不是直接依赖 Manager
-type TaskManagerInterface interface {
+type ManagerInterface interface {
 	SubmitTask(cmd *models.Command, tokenPrefix string) (*Task, error)
 	GetStatus(taskID string) (*Task, error)
 	Close()
@@ -40,7 +39,7 @@ type Task struct {
 	Command     string         `json:"command"`
 	Args        []string       `json:"args,omitempty"`
 	Cwd         string         `json:"cwd"`
-	Status      Status     `json:"status"`
+	Status      Status         `json:"status"`
 	CreatedAt   time.Time      `json:"created_at"`
 	StartedAt   *time.Time     `json:"started_at,omitempty"`
 	CompletedAt *time.Time     `json:"completed_at,omitempty"`
@@ -51,16 +50,16 @@ type Task struct {
 
 // SubmitResponse 任务提交响应
 type SubmitResponse struct {
-	TaskID    string     `json:"task_id"`
-	Status    Status `json:"status"`
-	Message   string     `json:"message"`
-	CreatedAt time.Time  `json:"created_at"`
+	TaskID    string    `json:"task_id"`
+	Status    Status    `json:"status"`
+	Message   string    `json:"message"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // StatusResponse 任务状态响应
 type StatusResponse struct {
 	TaskID      string     `json:"task_id"`
-	Status      Status `json:"status"`
+	Status      Status     `json:"status"`
 	CreatedAt   time.Time  `json:"created_at"`
 	StartedAt   *time.Time `json:"started_at,omitempty"`
 	CompletedAt *time.Time `json:"completed_at,omitempty"`

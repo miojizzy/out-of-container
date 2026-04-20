@@ -14,18 +14,18 @@ import (
 	"github.com/user/exec-server/internal/models"
 )
 
-// AuthMiddleware validates API token from Authorization header
-type AuthMiddleware struct {
+// Middleware validates API token from Authorization header
+type Middleware struct {
 	apiToken string
 }
 
-// NewAuthMiddleware creates a new auth middleware
-func NewAuthMiddleware(apiToken string) *AuthMiddleware {
-	return &AuthMiddleware{apiToken: apiToken}
+// NewMiddleware creates a new auth middleware
+func NewMiddleware(apiToken string) *Middleware {
+	return &Middleware{apiToken: apiToken}
 }
 
 // Middleware returns the HTTP middleware function
-func (a *AuthMiddleware) Middleware(next http.HandlerFunc) http.HandlerFunc {
+func (a *Middleware) Middleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Extract token from Authorization header
 		authHeader := r.Header.Get("Authorization")
@@ -55,7 +55,7 @@ func (a *AuthMiddleware) Middleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // unauthorized sends a 401 error response
-func (a *AuthMiddleware) unauthorized(w http.ResponseWriter, message string) {
+func (a *Middleware) unauthorized(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnauthorized)
 	if err := json.NewEncoder(w).Encode(models.ErrorResponse{

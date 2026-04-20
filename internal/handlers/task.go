@@ -10,11 +10,11 @@ import (
 
 // TaskHandler handles task-related endpoints
 type TaskHandler struct {
-	taskManager task.TaskManagerInterface
+	taskManager task.ManagerInterface
 }
 
 // NewTaskHandler creates a new task handler
-func NewTaskHandler(tm task.TaskManagerInterface) *TaskHandler {
+func NewTaskHandler(tm task.ManagerInterface) *TaskHandler {
 	return &TaskHandler{
 		taskManager: tm,
 	}

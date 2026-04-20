@@ -35,7 +35,7 @@ audit:
   log_file: "audit.log"
   rotation_max_mb: 100
   rotation_count: 5
-`)
+`
 
 func TestNewChecker(t *testing.T) {
 	// 创建临时配置文件
@@ -239,7 +239,7 @@ audit:
 whitelist:
   literal_commands:
     - "ls"
-    - "pwd"  // 添加新的允许命令
+    - "pwd"
   regex_commands:
     - "^git clone"
   allowed_paths:
@@ -364,7 +364,7 @@ whitelist:
   literal_commands:
     - "ls"
   regex_commands:
-    - "[invalid-regex"  // 无效的正则表达式
+    - "[invalid-regex"
   allowed_paths:
     - "/tmp"
   reload_interval_seconds: 1
@@ -427,7 +427,7 @@ whitelist:
     - "^git clone"
   allowed_paths:
     - "/tmp"
-  reload_interval_seconds: 0  // 禁用自动重载，方便测试
+  reload_interval_seconds: 0
 audit:
   enabled: true
   log_file: "audit.log"
@@ -457,7 +457,7 @@ audit:
 whitelist:
   literal_commands:
     - "ls"
-    - "pwd"  // 添加新的允许命令
+    - "pwd"
   regex_commands:
     - "^git clone"
   allowed_paths:
@@ -503,4 +503,23 @@ func TestConcurrentAccess(t *testing.T) {
 	configContent := testConfigYAML
 
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
-	require.NoError
+	require.NoError(t, err)
+
+	checker, err := NewChecker(configPath)
+	require.NoError(t, err)
+
+	// 测试并发访问
+	done := make(chan bool, 10)
+	for i := 0; i < 10; i++ {
+		go func() {
+			allowed, _, err := checker.IsAllowed("ls", "/tmp")
+			require.NoError(t, err)
+			assert.True(t, allowed)
+			done <- true
+		}()
+	}
+
+	for i := 0; i < 10; i++ {
+		<-done
+	}
+}

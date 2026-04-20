@@ -12,22 +12,22 @@ import (
 	"github.com/user/exec-server/internal/models"
 )
 
-// ConcurrencyLimiter controls maximum concurrent executions
-type ConcurrencyLimiter struct {
+// Limiter controls maximum concurrent executions
+type Limiter struct {
 	sem chan struct{}
 	max int
 }
 
-// NewConcurrencyLimiter creates a new limiter with max concurrent executions
-func NewConcurrencyLimiter(max int) *ConcurrencyLimiter {
-	return &ConcurrencyLimiter{
-		sem: make(chan struct{}, max),
-		max: max,
+// NewLimiter creates a new limiter with max concurrent executions
+func NewLimiter(maxConcurrent int) *Limiter {
+	return &Limiter{
+		sem: make(chan struct{}, maxConcurrent),
+		max: maxConcurrent,
 	}
 }
 
 // Middleware returns HTTP middleware that limits concurrent requests
-func (l *ConcurrencyLimiter) Middleware(next http.HandlerFunc) http.HandlerFunc {
+func (l *Limiter) Middleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Try to acquire semaphore
 		select {
@@ -43,7 +43,7 @@ func (l *ConcurrencyLimiter) Middleware(next http.HandlerFunc) http.HandlerFunc 
 }
 
 // serviceUnavailable sends a 503 error response
-func (l *ConcurrencyLimiter) serviceUnavailable(w http.ResponseWriter) {
+func (l *Limiter) serviceUnavailable(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusServiceUnavailable)
 	if err := json.NewEncoder(w).Encode(models.ErrorResponse{
@@ -56,11 +56,11 @@ func (l *ConcurrencyLimiter) serviceUnavailable(w http.ResponseWriter) {
 }
 
 // Current returns current number of active executions
-func (l *ConcurrencyLimiter) Current() int {
+func (l *Limiter) Current() int {
 	return len(l.sem)
 }
 
 // Max returns maximum allowed concurrent executions
-func (l *ConcurrencyLimiter) Max() int {
+func (l *Limiter) Max() int {
 	return l.max
 }
