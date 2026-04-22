@@ -124,6 +124,24 @@ timeout_seconds: 35
 ./ooc-client -help
 ```
 
+### 7. 异步任务模式
+
+```bash
+# 提交异步任务
+./ooc-client -server http://localhost:8080 -token your-token -command make -cwd /home/user/projects -async
+
+# 查询任务状态
+./ooc-client -server http://localhost:8080 -token your-token -task-id task-1234567890 -status
+
+# 异步任务示例（编译大型项目）
+./ooc-client -server http://localhost:8080 -token your-token -command "make" -args '["all"]' -cwd /home/user/projects -async
+# 输出: {"task_id":"task-17449123456789012345678","status":"pending","message":"task submitted successfully","created_at":"2026-04-17T10:30:45Z"}
+
+# 查询任务状态
+./ooc-client -server http://localhost:8080 -token your-token -task-id task-17449123456789012345678 -status
+# 输出: {"task_id":"task-17449123456789012345678","status":"completed","exit_code":0,"stdout":"[100%] Built target myapp\n","stderr":"","duration_ms":4234,"truncated":false,"output_size_bytes":1024}
+```
+
 ## 配置说明
 
 ### Server 配置

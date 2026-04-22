@@ -10,11 +10,11 @@ import (
 
 // TaskHandler handles task-related endpoints
 type TaskHandler struct {
-	taskManager task.TaskManagerInterface
+	taskManager *task.Manager
 }
 
 // NewTaskHandler creates a new task handler
-func NewTaskHandler(tm task.TaskManagerInterface) *TaskHandler {
+func NewTaskHandler(tm *task.Manager) *TaskHandler {
 	return &TaskHandler{
 		taskManager: tm,
 	}
@@ -109,7 +109,7 @@ func (h *TaskHandler) GetTaskStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build response
-	response := &task.StatusResponse{
+	response := &task.TaskStatusResponse{
 		TaskID:    taskObj.ID,
 		Status:    taskObj.Status,
 		CreatedAt: taskObj.CreatedAt,
