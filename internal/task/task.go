@@ -8,20 +8,20 @@ import (
 	"github.com/user/exec-server/internal/models"
 )
 
-// Status 任务状态
-type Status string
+// TaskStatus 任务状态
+type TaskStatus string
 
-// StatusPending 任务处于等待执行状态
-// StatusRunning 任务正在执行中
-// StatusCompleted 任务已成功完成
-// StatusFailed 任务执行失败
-// StatusTimeout 任务因超时而终止
+// TaskStatusPending 任务处于等待执行状态
+// TaskStatusRunning 任务正在执行中
+// TaskStatusCompleted 任务已成功完成
+// TaskStatusFailed 任务执行失败
+// TaskStatusTimeout 任务因超时而终止
 const (
-	StatusPending   Status = "pending"
-	StatusRunning   Status = "running"
-	StatusCompleted Status = "completed"
-	StatusFailed    Status = "failed"
-	StatusTimeout   Status = "timeout"
+	TaskStatusPending   TaskStatus = "pending"
+	TaskStatusRunning   TaskStatus = "running"
+	TaskStatusCompleted TaskStatus = "completed"
+	TaskStatusFailed    TaskStatus = "failed"
+	TaskStatusTimeout   TaskStatus = "timeout"
 )
 
 // ManagerInterface 定义任务管理器接口，用于解耦 handlers 包
@@ -39,7 +39,7 @@ type Task struct {
 	Command     string         `json:"command"`
 	Args        []string       `json:"args,omitempty"`
 	Cwd         string         `json:"cwd"`
-	Status      Status         `json:"status"`
+	Status      TaskStatus     `json:"status"`
 	CreatedAt   time.Time      `json:"created_at"`
 	StartedAt   *time.Time     `json:"started_at,omitempty"`
 	CompletedAt *time.Time     `json:"completed_at,omitempty"`
@@ -50,16 +50,16 @@ type Task struct {
 
 // SubmitResponse 任务提交响应
 type SubmitResponse struct {
-	TaskID    string    `json:"task_id"`
-	Status    Status    `json:"status"`
-	Message   string    `json:"message"`
-	CreatedAt time.Time `json:"created_at"`
+	TaskID    string     `json:"task_id"`
+	Status    TaskStatus `json:"status"`
+	Message   string     `json:"message"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
-// StatusResponse 任务状态响应
-type StatusResponse struct {
+// TaskStatusResponse 任务状态响应
+type TaskStatusResponse struct {
 	TaskID      string     `json:"task_id"`
-	Status      Status     `json:"status"`
+	Status      TaskStatus `json:"status"`
 	CreatedAt   time.Time  `json:"created_at"`
 	StartedAt   *time.Time `json:"started_at,omitempty"`
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
@@ -79,7 +79,7 @@ func NewTask(cmd *models.Command, tokenPrefix string) *Task {
 		Command:     cmd.Command,
 		Args:        cmd.Args,
 		Cwd:         cmd.Cwd,
-		Status:      StatusPending,
+		Status:      TaskStatusPending,
 		CreatedAt:   time.Now(),
 		TokenPrefix: tokenPrefix,
 	}

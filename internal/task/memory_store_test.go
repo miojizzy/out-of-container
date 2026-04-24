@@ -80,7 +80,7 @@ func TestMemoryStore_Update(t *testing.T) {
 	}
 
 	// 更新为 running 状态
-	if err := store.Update(task.ID, StatusRunning, nil, nil); err != nil {
+	if err := store.Update(task.ID, TaskStatusRunning, nil, nil); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
@@ -89,7 +89,7 @@ func TestMemoryStore_Update(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
-	if loaded.Status != StatusRunning {
+	if loaded.Status != TaskStatusRunning {
 		t.Errorf("Expected status 'running', got %s", loaded.Status)
 	}
 	if loaded.StartedAt == nil {
@@ -104,7 +104,7 @@ func TestMemoryStore_Update(t *testing.T) {
 		DurationMs: 5000,
 		Truncated:  false,
 	}
-	if err := store.Update(task.ID, StatusCompleted, result, nil); err != nil {
+	if err := store.Update(task.ID, TaskStatusCompleted, result, nil); err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
@@ -113,7 +113,7 @@ func TestMemoryStore_Update(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
-	if loaded.Status != StatusCompleted {
+	if loaded.Status != TaskStatusCompleted {
 		t.Errorf("Expected status 'completed', got %s", loaded.Status)
 	}
 	if loaded.CompletedAt == nil {
@@ -231,9 +231,9 @@ func TestMemoryStore_CleanupExpired(t *testing.T) {
 	}
 
 	// 模拟任务1已完成，任务2还在运行
-	task1.Status = StatusCompleted
+	task1.Status = TaskStatusCompleted
 	task1.CompletedAt = &time.Time{}
-	task2.Status = StatusRunning
+	task2.Status = TaskStatusRunning
 
 	// 清理1秒前的任务
 	if err := store.CleanupExpired(1 * time.Second); err != nil {

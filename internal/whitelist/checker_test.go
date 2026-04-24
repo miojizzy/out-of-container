@@ -35,15 +35,7 @@ audit:
   log_file: "audit.log"
   rotation_max_mb: 100
   rotation_count: 5
-`)
-
-func TestNewChecker(t *testing.T) {
-	// 创建临时配置文件
-	tempDir := t.TempDir()
-	configPath := filepath.Join(tempDir, "config.yaml")
-
-	// 创建有效的配置内容
-	configContent := testConfigYAML
+`
 
 func TestNewChecker(t *testing.T) {
 	// 创建临时配置文件
@@ -521,12 +513,13 @@ func TestConcurrentAccess(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go func() {
 			allowed, _, err := checker.IsAllowed("ls", "/tmp")
-			require.NoError(t, err)
 			assert.True(t, allowed)
+			assert.NoError(t, err)
 			done <- true
 		}()
 	}
 
+	// 等待所有goroutine完成
 	for i := 0; i < 10; i++ {
 		<-done
 	}
