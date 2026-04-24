@@ -343,25 +343,32 @@ graph LR
     F --> G[自动打 Tag]
     G --> H[触发 Release 构建]
     H --> I[发布到 GitHub Releases]
+
+    J[手动触发 Tag] --> G
     
     style B fill:#e1f5fe
     style G fill:#fff3e0
     style I fill:#e8f5e8
+    style J fill:#fce4ec
 ```
 
 ### 触发条件
 
-1. **PR 提交或更新** → 触发 `ci.yml`
+1. **PR 提交或更新 / main 直推** → 触发 `ci.yml`
    - 运行 `go test`（包含 `-race` 检测）
    - 运行 `golangci-lint`
    - 上传测试覆盖率到 Codecov
 
-2. **PR 合并到 main** → 触发 `auto-tag-on-merge.yml`
-   - 自动递增版本号（patch++）
-   - 创建 Git tag（格式：`vMAJOR.MINOR.PATCH`）
-   - 创建 GitHub Release 页面
+2. **PR 合并到 main** → 触发 `tag.yml`（自动模式）
+   - 调用 `.github/scripts/tag_version.sh` 计算下一个 patch 版本
+   - 在 main 最新提交上创建 annotated tag 并推送
+   - 通过 `concurrency` 串行化，避免并发打出重复 tag
 
-3. **推送 tag（v*）** → 触发 `release.yml`
+3. **手动触发** → 触发 `tag.yml`（手动模式）
+   - 在 GitHub Actions 页面输入完整 tag（例如 `v2.00.000`）
+   - 校验格式后在 main 上打 tag 并推送
+
+4. **tag 推送（v*）** → 触发 `release.yml`
    - 构建 server 和 client 二进制文件（amd64/arm64）
    - 生成 SHA256 checksums
    - 发布到 GitHub Releases（包含 skill 文档）
@@ -369,8 +376,10 @@ graph LR
 ### 版本管理
 
 - **语义化版本**：`vMAJOR.MINOR.PATCH`（例如 v1.02.003）
+- **格式规则**：MINOR 两位补零，PATCH 三位补零
+- **规则来源**：`.github/scripts/tag_version.sh`（唯一真相来源）
 - **自动递增**：每次 PR 合并自动递增 PATCH 版本
-- **手动发布**：通过推送 tag 触发 release 构建
+- **手动发布**：通过手动触发 Tag 工作流指定完整 tag
 
 ### 最佳实践
 

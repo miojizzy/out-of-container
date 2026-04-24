@@ -104,7 +104,7 @@ func TestManager_SubmitTask(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	if task.Status != TaskStatusPending {
+	if task.Status != StatusPending {
 		t.Errorf("Expected status 'pending', got %s", task.Status)
 	}
 
@@ -126,7 +126,7 @@ func TestManager_SubmitTask(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	if loaded.Status != TaskStatusCompleted {
+	if loaded.Status != StatusCompleted {
 		t.Errorf("Expected status 'completed', got %s", loaded.Status)
 	}
 
@@ -250,7 +250,7 @@ func TestManager_StartCleanupLoop(t *testing.T) {
 		Cwd:     "/tmp",
 	}
 	task := NewTask(cmd, "")
-	task.Status = TaskStatusPending
+	task.Status = StatusPending
 
 	if err := store.Save(task); err != nil {
 		t.Fatalf("Failed to save task: %v", err)
@@ -272,7 +272,7 @@ func TestManager_StartCleanupLoop(t *testing.T) {
 	}
 
 	// 更新任务为已完成
-	if err := store.Update(task.ID, TaskStatusCompleted, &models.Result{
+	if err := store.Update(task.ID, StatusCompleted, &models.Result{
 		ExitCode:   0,
 		Stdout:     "success\n",
 		Stderr:     "",

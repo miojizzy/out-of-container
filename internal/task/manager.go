@@ -64,7 +64,7 @@ func (tm *Manager) SubmitTask(cmd *models.Command, tokenPrefix string) (*Task, e
 
 	// 创建任务（包含 token prefix 用于审计）
 	task := NewTask(cmd, tokenPrefix)
-	task.Status = TaskStatusPending
+	task.Status = StatusPending
 
 	// 保存任务到存储
 	if err := tm.store.Save(task); err != nil {
@@ -91,9 +91,9 @@ func (tm *Manager) executeTask(taskID string) {
 
 	// 更新状态为 running
 	now := time.Now()
-	task.Status = TaskStatusRunning
+	task.Status = StatusRunning
 	task.StartedAt = &now
-	if err := tm.store.Update(taskID, TaskStatusRunning, nil, nil); err != nil {
+	if err := tm.store.Update(taskID, StatusRunning, nil, nil); err != nil {
 		log.Printf("Failed to update task %s status: %v\n", taskID, err)
 		return
 	}
@@ -116,15 +116,15 @@ func (tm *Manager) executeTask(taskID string) {
 	result := tm.executor.Execute(execCmd)
 
 	// 处理结果
-	taskStatus := TaskStatusCompleted
+	taskStatus := StatusCompleted
 	var resultData *models.Result
 	var errMsg *string
 
 	if result.Error != nil {
 		if result.HTTPError == 408 { // context deadline exceeded
-			taskStatus = TaskStatusTimeout
+			taskStatus = StatusTimeout
 		} else {
-			taskStatus = TaskStatusFailed
+			taskStatus = StatusFailed
 		}
 		msg := result.Error.Error()
 		errMsg = &msg

@@ -10,13 +10,13 @@ import (
 
 // TaskHandler handles task-related endpoints
 type TaskHandler struct {
-	taskManager *task.Manager
+	taskManager task.ManagerInterface
 }
 
 // NewTaskHandler creates a new task handler
-func NewTaskHandler(tm *task.Manager) *TaskHandler {
+func NewTaskHandler(tm task.ManagerInterface) *TaskHandler {
 	return &TaskHandler{
-		taskManager: tm,
+		taskManager: tm,https://github.com/miojizzy/out-of-container/pull/21/conflict?name=internal%252Ftask%252Fmanager.go&ancestor_oid=f5dce11ca4355a8379c6165a7cef033f91c67d65&base_oid=0b926a373336b1c266c797ab85651660b2fc61e4&head_oid=45e444e0864e19fd65494fdebbf80939f0f6731e
 	}
 }
 
@@ -109,7 +109,7 @@ func (h *TaskHandler) GetTaskStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build response
-	response := &task.TaskStatusResponse{
+	response := &task.StatusResponse{
 		TaskID:    taskObj.ID,
 		Status:    taskObj.Status,
 		CreatedAt: taskObj.CreatedAt,

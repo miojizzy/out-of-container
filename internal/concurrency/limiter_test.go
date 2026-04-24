@@ -13,7 +13,7 @@ import (
 
 // mockHandler 模拟一个简单的HTTP处理器
 func mockHandler(statusCode int) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(statusCode)
 		_, _ = w.Write([]byte("OK"))
 	}
@@ -21,15 +21,15 @@ func mockHandler(statusCode int) http.HandlerFunc {
 
 // slowHandler 模拟一个慢速处理器，用于测试并发控制
 func slowHandler(duration time.Duration) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		time.Sleep(duration)
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("OK"))
 	}
 }
 
-// TestNewConcurrencyLimiter 测试创建并发限制器
-func TestNewConcurrencyLimiter(t *testing.T) {
+// TestNewLimiter 测试创建并发限制器
+func TestNewLimiter(t *testing.T) {
 	tests := []struct {
 		name     string
 		max      int
@@ -58,7 +58,7 @@ func TestNewConcurrencyLimiter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			limiter := NewConcurrencyLimiter(tt.max)
+			limiter := NewLimiter(tt.max)
 
 			if limiter.Max() != tt.wantMax {
 				t.Errorf("Max() = %d, want %d", limiter.Max(), tt.wantMax)
@@ -73,7 +73,7 @@ func TestNewConcurrencyLimiter(t *testing.T) {
 
 // TestConcurrencyLimiter_Passthrough 测试限制器在未达到限制时正常通过
 func TestConcurrencyLimiter_Passthrough(t *testing.T) {
-	limiter := NewConcurrencyLimiter(5)
+	limiter := NewLimiter(5)
 	handler := mockHandler(http.StatusOK)
 	middleware := limiter.Middleware(handler)
 
@@ -102,7 +102,7 @@ func TestConcurrencyLimiter_Max(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			limiter := NewConcurrencyLimiter(tt.max)
+			limiter := NewLimiter(tt.max)
 			if limiter.Max() != tt.max {
 				t.Errorf("Max() = %d, want %d", limiter.Max(), tt.max)
 			}
@@ -113,7 +113,7 @@ func TestConcurrencyLimiter_Max(t *testing.T) {
 // TestConcurrencyLimiter_Reject 测试超过最大并发时拒绝请求
 func TestConcurrencyLimiter_Reject(t *testing.T) {
 	maxConcurrent := 2
-	limiter := NewConcurrencyLimiter(maxConcurrent)
+	limiter := NewLimiter(maxConcurrent)
 
 	// 使用慢速处理器来保持请求在处理中
 	handler := slowHandler(100 * time.Millisecond)
@@ -177,7 +177,7 @@ func TestConcurrencyLimiter_Reject(t *testing.T) {
 
 // TestServiceUnavailableResponse 测试503响应格式
 func TestServiceUnavailableResponse(t *testing.T) {
-	limiter := NewConcurrencyLimiter(1)
+	limiter := NewLimiter(1)
 
 	// 使用慢速处理器来保持请求在处理中
 	handler := slowHandler(50 * time.Millisecond)
@@ -226,8 +226,8 @@ func TestServiceUnavailableResponse(t *testing.T) {
 }
 
 // TestCurrentConcurrency 测试Current方法在并发场景下的准确性
-func TestCurrentConcurrency(t *testing.T) {
-	limiter := NewConcurrencyLimiter(3)
+func TestCurrentConcurrency(_ *testing.T) {
+	limiter := NewLimiter(3)
 	handler := slowHandler(50 * time.Millisecond)
 	middleware := limiter.Middleware(handler)
 
@@ -257,7 +257,7 @@ func TestCurrentConcurrency(t *testing.T) {
 
 // TestZeroConcurrency 测试零并发限制的边界情况
 func TestZeroConcurrency(t *testing.T) {
-	limiter := NewConcurrencyLimiter(0)
+	limiter := NewLimiter(0)
 	handler := mockHandler(http.StatusOK)
 	middleware := limiter.Middleware(handler)
 
@@ -288,7 +288,7 @@ func TestZeroConcurrency(t *testing.T) {
 
 // TestOneConcurrency 测试单并发限制的边界情况
 func TestOneConcurrency(t *testing.T) {
-	limiter := NewConcurrencyLimiter(1)
+	limiter := NewLimiter(1)
 	handler := slowHandler(50 * time.Millisecond)
 	middleware := limiter.Middleware(handler)
 
@@ -314,7 +314,7 @@ func TestOneConcurrency(t *testing.T) {
 
 // TestErrorResponseStructure 测试错误响应结构的完整性
 func TestErrorResponseStructure(t *testing.T) {
-	limiter := NewConcurrencyLimiter(0) // 零并发限制确保请求被拒绝
+	limiter := NewLimiter(0) // 零并发限制确保请求被拒绝
 	handler := mockHandler(http.StatusOK)
 	middleware := limiter.Middleware(handler)
 
@@ -351,7 +351,7 @@ func TestErrorResponseStructure(t *testing.T) {
 // TestServiceUnavailableErrorHandling 测试serviceUnavailable中JSON编码错误的处理
 func TestServiceUnavailableErrorHandling(t *testing.T) {
 	// 这个测试主要用于提高代码覆盖率，实际的错误处理已经在TestServiceUnavailableResponse中测试
-	limiter := NewConcurrencyLimiter(0)
+	limiter := NewLimiter(0)
 
 	// 验证Max和Current方法
 	if limiter.Max() != 0 {

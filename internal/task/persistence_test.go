@@ -77,7 +77,7 @@ func TestPersistenceManager_SaveRestore(t *testing.T) {
 	}
 
 	// 更新 task1 状态
-	if err := store.Update(task1.ID, TaskStatusCompleted, &models.Result{
+	if err := store.Update(task1.ID, StatusCompleted, &models.Result{
 		ExitCode:   0,
 		Stdout:     "hello\n",
 		Stderr:     "",
@@ -122,7 +122,7 @@ func TestPersistenceManager_SaveRestore(t *testing.T) {
 
 	// 验证 task1 数据
 	if savedTask1, ok := savedTasks[task1.ID]; ok {
-		if savedTask1.Status != TaskStatusCompleted {
+		if savedTask1.Status != StatusCompleted {
 			t.Errorf("Expected task1 status 'completed', got %s", savedTask1.Status)
 		}
 		if savedTask1.Result == nil {
@@ -148,7 +148,7 @@ func TestPersistenceManager_SaveRestore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get task1 after restore: %v", err)
 	}
-	if restoredTask1.Status != TaskStatusCompleted {
+	if restoredTask1.Status != StatusCompleted {
 		t.Errorf("Expected task1 status 'completed', got %s", restoredTask1.Status)
 	}
 }

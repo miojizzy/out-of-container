@@ -15,7 +15,7 @@ type Store interface {
 	Get(taskID string) (*Task, error)
 
 	// Update 更新任务状态和结果
-	Update(taskID string, status TaskStatus, result *models.Result, err *string) error
+	Update(taskID string, status Status, result *models.Result, err *string) error
 
 	// Delete 删除任务
 	Delete(taskID string) error
