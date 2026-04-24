@@ -513,12 +513,13 @@ func TestConcurrentAccess(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go func() {
 			allowed, _, err := checker.IsAllowed("ls", "/tmp")
-			require.NoError(t, err)
 			assert.True(t, allowed)
+			assert.NoError(t, err)
 			done <- true
 		}()
 	}
 
+	// 等待所有goroutine完成
 	for i := 0; i < 10; i++ {
 		<-done
 	}

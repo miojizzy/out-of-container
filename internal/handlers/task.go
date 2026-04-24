@@ -10,11 +10,11 @@ import (
 
 // TaskHandler handles task-related endpoints
 type TaskHandler struct {
-	taskManager task.ManagerInterface
+	taskManager *task.Manager
 }
 
 // NewTaskHandler creates a new task handler
-func NewTaskHandler(tm task.ManagerInterface) *TaskHandler {
+func NewTaskHandler(tm *task.Manager) *TaskHandler {
 	return &TaskHandler{
 		taskManager: tm,
 	}
@@ -44,20 +44,8 @@ func (h *TaskHandler) SubmitTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract token prefix from Authorization header
-	token := r.Header.Get("Authorization")
-	tokenPrefix := ""
-	if len(token) > 7 && token[:7] == "Bearer " {
-		token = token[7:]
-	}
-	if len(token) > 8 {
-		tokenPrefix = token[:8]
-	} else if len(token) > 0 {
-		tokenPrefix = token
-	}
-
-	// Submit task with token prefix for audit logging
-	newTask, err := h.taskManager.SubmitTask(&cmd, tokenPrefix)
+	// Submit task
+	newTask, err := h.taskManager.SubmitTask(&cmd, "")
 	if err != nil {
 		if err.Error() == "command not in whitelist" {
 			http.Error(w, "command not in whitelist", http.StatusForbidden)
@@ -109,7 +97,7 @@ func (h *TaskHandler) GetTaskStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Build response
-	response := &task.StatusResponse{
+	response := &task.TaskStatusResponse{
 		TaskID:    taskObj.ID,
 		Status:    taskObj.Status,
 		CreatedAt: taskObj.CreatedAt,

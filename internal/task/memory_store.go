@@ -56,7 +56,7 @@ func (s *MemoryStore) Get(taskID string) (*Task, error) {
 }
 
 // Update 更新任务状态和结果
-func (s *MemoryStore) Update(taskID string, status Status, result *models.Result, err *string) error {
+func (s *MemoryStore) Update(taskID string, status TaskStatus, result *models.Result, err *string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -67,10 +67,10 @@ func (s *MemoryStore) Update(taskID string, status Status, result *models.Result
 
 	task.Status = status
 	switch status {
-	case StatusRunning:
+	case TaskStatusRunning:
 		now := time.Now()
 		task.StartedAt = &now
-	case StatusCompleted, StatusFailed, StatusTimeout:
+	case TaskStatusCompleted, TaskStatusFailed, TaskStatusTimeout:
 		now := time.Now()
 		task.CompletedAt = &now
 		if result != nil {
